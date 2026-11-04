@@ -1,0 +1,70 @@
+/* Square client-side window decorations */
+window.csd,
+window.solid-csd {
+    border-radius: 0;
+}
+
+/* Square Qud styling for GTK entry fields */
+entry,
+entry:backdrop,
+entry:focus,
+entry:focus-within {
+    border-radius: 0;
+    background-image: none;
+    background-color: #0f3b3a;
+    color: #b1c9c3;
+    border: 1px solid #155352;
+    box-shadow: none;
+    text-shadow: none;
+}
+
+entry:focus {
+    border-color: #98875f;
+    outline: none;
+}
+
+/* Explicit square styling for GTK3 entry widgets */
+entry {
+    border-radius: 0;
+    -gtk-outline-radius: 0;
+    background-image: none;
+    background-color: #0f3b3a;
+    color: #b1c9c3;
+    border: 1px solid #155352;
+    box-shadow: none;
+}
+
+entry:focus {
+    border-color: #98875f;
+}
+
+/* Override Adwaita's 5px radius on the Slick Greeter password entry */
+entry:focus,
+entry:focus-within,
+entry:backdrop,
+entry:focus:backdrop {
+    border-radius: 0;
+    -gtk-outline-radius: 0;
+    background-color: #0f3b3a;
+    background-image: none;
+    border-color: #155352;
+    box-shadow: none;
+}
+
+entry:focus {
+    border-color: #98875f;
+}
+
+/* Qud: remove rounded corners from all GTK3 widgets */
+* {
+    border-radius: 0 !important;
+    -gtk-outline-radius: 0 !important;
+}
+
+/* Remove Adwaita's rounded corners from all GTK3 buttons */
+button,
+button.titlebutton,
+notebook > header > tabs > arrow {
+    border-radius: 0 !important;
+    -gtk-outline-radius: 0 !important;
+}

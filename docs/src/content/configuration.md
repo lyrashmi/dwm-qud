@@ -1,0 +1,449 @@
+---
+title: Configuration
+description: Customize dwm-titus defaults, live-reloading hotkeys, window rules, and XDG autostart behavior.
+navLabel: Configuration
+eyebrow: Make it yours
+---
+
+# Configuration
+
+dwm-titus keeps user configuration under
+`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/`. Hotkeys and themes
+**live-reload on save** — no recompile needed for most changes.
+
+| File | Purpose |
+|------|---------|
+| `config/hotkeys.toml` | All keybindings |
+| `config/themes.toml` | Colors, themes, border size |
+| `power.conf` | Control Center screen DPMS and auto-lock choices |
+
+For deeper changes (window rules, fonts, refresh rate), edit `config.h` and
+run the complete developer synchronization command:
+
+```bash
+./scripts/dev-sync-install.sh
+```
+
+It rebuilds dwm, updates all installed commands and managed Quickshell/data
+files when needed, verifies parity, and reports whether the dwm session must be
+restarted. When a session restart is already required, it activates Quickshell
+there so the tray host starts before tray clients. Use
+`./scripts/dev-sync-install.sh --check` for a non-mutating audit.
+
+---
+
+## What survives updates
+
+`make install` and the GUI Desktop Update keep user-owned files and replace
+managed ones.
+
+| User-owned (preserved) | Managed (replaced) |
+|------|---------|
+| `${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/` (TOML files and other settings) | `${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/` |
+| Other application configs under `${XDG_CONFIG_HOME:-$HOME/.config}/` (unrelated settings preserved; see theme exception below) | `${XDG_DATA_HOME:-$HOME/.local/share}/dwm-titus/config` and `scripts` |
+| `.xinitrc` and `config.h` | Installed `dwm-*` commands |
+
+Source installs also apply the selected theme: `make install` regenerates
+Dwmterm colors and Alacritty/Kitty active-theme files, updates their theme imports/includes,
+and writes managed GTK/Qt appearance keys. Unrelated application settings are
+preserved, but these theme integration values are not. Back up your effective
+XDG configuration directory and `$HOME/.gtkrc-2.0` (including its target if it
+is a symlink) before installing if you need to restore them. GTK2 keeps its
+appearance settings outside the XDG configuration directory. The
+GUI Desktop Update preserves application configuration.
+
+`${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/` is replaced on purpose by both `make install` and
+Desktop Update, so local edits there are lost. A symlink there is not
+supported: `make install` removes it and puts a real directory in its place,
+and Desktop Update refuses to run. To keep shell changes, commit them on a
+branch of your dwm-titus checkout and update with the source workflow
+instead of the GUI, which reports the changed tree as needing a sync.
+
+Backed up is not the same as preserved: the pre-update backup in
+[Source Updates and Recovery](/install.html) archives the whole XDG config
+directory, including `${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/`, so edits made there can be
+copied back by hand from that backup, but no update keeps them in place.
+
+---
+
+## Picom opacity and backend
+
+Open **Settings > Appearance > Compositor** to change foreground (active) and
+background (inactive) window opacity. Sliders save when released; keyboard edits
+save after a short pause. Values stay the same when switching themes. Custom
+Picom rules can override these defaults for individual windows.
+
+The controls read the active Picom configuration, normally `~/.config/picom.conf`
+or `~/.config/picom/picom.conf`, and observe external edits. With no configuration,
+they show 100% and create a minimal file on the first edit. A system configuration
+can be copied with **Create user configuration**. The same action imports read-only
+includes referenced by an existing writable user configuration, backing up the
+root before updating its include paths, including when that standard user root
+is explicitly selected with `--config` or `DWM_PICOM_CONFIG`. If an import fails,
+new include copies remain available for recovery so concurrent root edits cannot
+retain broken references. Recovery import storage is limited to 320 files
+and 320 MiB. If full, imports stop before publication and identify the directory
+to review. Copies are never automatically deleted because external configurations
+or recovery backups may still reference them. Comments, unrelated settings,
+and included files are preserved; the ten most recent edits retain recovery backups. Invalid
+or read-only configurations show an explanation rather than disappearing controls.
+Edits made while Picom is stopped take effect the next time it starts.
+Valid configurations using syntax the editor cannot rewrite, such as nested
+includes, still support startup, restart, and reload through Picom itself.
+
+**Automatic** chooses GLX for an accelerated Intel/AMD renderer and XRender for
+NVIDIA, software rendering, or unknown hardware. Failed automatic GLX startup
+retries XRender once. An existing explicit backend is preserved; choose Automatic
+to remove it. XRender, GLX, and experimental EGL remain selectable. The active
+renderer matters, not an unused or passthrough GPU installed in the machine.
+
+`PICOM_BACKEND` remains a session override. Unset it before selecting a different
+backend in Settings. `DWM_PICOM_CONFIG=/absolute/path/picom.conf` can select a
+custom configuration; an existing Picom `--config` argument is also respected.
+Command-line opacity overrides must be removed before editing opacity in Settings.
+
+```bash
+dwm-settings-picom status
+dwm-settings-picom restart
+```
+
+Restart and toggle affect only your compositor on the current display. Failed
+configuration activation restores the prior files and attempts to recover the
+previous compositor; the error identifies the backup and session log.
+
+## config.h Essentials
+
+`config.h` is your personal copy of `config.def.h`. It is created automatically by `make` if it doesn't exist.
+
+```bash
+$EDITOR config.h
+./scripts/dev-sync-install.sh
+```
+
+### Key Options
+
+| Setting | Description |
+|---------|-------------|
+| `refresh_rate` | Match your monitor (default 60; set 120 for high-refresh) |
+| `fonts[]` | Font family and size used in the bar |
+| `colors[]` | Managed by `themes.toml` — rarely edit directly |
+| `autostart[]` | Programs launched on dwm start |
+| `rules[]` | Per-app window rules (floating, tag assignment, terminal flag) |
+| `keys[]` | Fallback static keybinds (prefer `hotkeys.toml`) |
+| `MODKEY` | `Mod4Mask` = Super, `Mod1Mask` = Alt |
+
+### Window Rules
+
+#### Open an application across the entire monitor
+
+Add a rule to `~/.config/dwm-titus/window-rules.toml` (or your
+`XDG_CONFIG_HOME` equivalent), inside its existing `rules = [...]` array:
+
+```toml
+{ class="YourApp", fullscreen=1, noswallow=1, tags=5 },
+```
+
+Use `xprop WM_CLASS` and click the application to find its class (the second
+quoted value). Omit `tags` to use the current tag, or add `monitor` to select a
+monitor using the existing tag/monitor rules. `noswallow=1` keeps the application
+independent of the terminal that launched it.
+
+`fullscreen=1` opens a newly managed window in true fullscreen: it covers the
+entire assigned monitor, including the top-bar area, with no dwm border or gaps.
+The managed top bar hides on that monitor while the fullscreen window is visible.
+Other monitors and the tag's selected layout stay unchanged. This differs from
+monocle, which uses the available work area. Existing explicitly allowed overlays
+can still appear above fullscreen windows.
+
+For games that should remain windowed, use `fakefullscreen=1` instead. This
+fills the monitor, hides the panel, and removes dwm borders without advertising
+`_NET_WM_STATE_FULLSCREEN` to Wine or the application. It overrides normal size
+hints while active. Start the game in its own windowed mode; dwm does not edit
+game settings, and a game may independently react to the resized window.
+
+Add `ignoresizehints=1` to bypass application minimum, maximum, base-size,
+resize-increment, and aspect-ratio hints during normal tiling and resizing.
+Fixed-size hints then also stop forcing the window to float. This is useful
+for Wine windows and can be combined with `fakefullscreen=1`; fake fullscreen
+already uses a direct monitor-sized resize, while `ignoresizehints` also covers
+normal layout and resize paths. It does not change the game's rendering resolution
+or stretch pixels inside a window that the application refuses to redraw.
+
+Only integer `1` enables it; the last matching rule wins, including zero or an
+omitted field. A late title change recalculates this option and the fixed-size
+status. A window that was already floating stays floating until you toggle it
+back to tiled mode. Existing rules keep their size-hint behavior by default.
+
+Press `Super+Shift+Y` to exit this rule's mode and restore the previous window
+size and border. While active, client fullscreen requests cannot switch it to
+advertised fullscreen or cancel its screen-filling geometry. Outside this rule's
+mode, that shortcut retains its existing behavior: advertising fullscreen while
+keeping the normal layout. The shortcut and rule intentionally differ.
+
+Use only one mode per rule. If both fields are `1`, `fakefullscreen` wins. Both
+accept only integer `1`; zero, omitted, or invalid values disable that mode in
+the final matching rule.
+
+Rules hot-reload when saved; reopening applies them at startup. A title-based
+rule for either mode also applies once if the matching title arrives after the
+window opens, as can happen with Wine games. For example:
+
+```toml
+{ class="steam_app_24200", title="DC Universe Online [DCUOT.", fakefullscreen=1, ignoresizehints=1 },
+```
+
+This excludes the launcher titled only `DC Universe Online`. Matching uses
+case-sensitive substrings. Later title changes do not force fullscreen back on
+after you exit it. Late title matching does not move the window to a different
+tag or monitor, and saving rules alone does not reapply them to existing windows.
+
+Like other scalar rule fields, the last matching rule wins. Existing files need
+no migration. The `fullscreen=1` mode remains an opening preference: the
+application can leave true fullscreen normally. The `fakefullscreen=1` mode
+stays borderless and windowed until you exit it with `Super+Shift+Y`. Transient dialogs keep the existing parent-inheritance behavior, and
+unmanaged overlay windows are not resized by this option.
+
+#### Overlays above other applications
+
+An overlay's application chooses whether its X11 window is managed. This is
+separate from whether the window looks like a borderless overlay:
+
+| Window kind | X11 setting | Who controls it | `alwaysontop=1` behavior |
+| --- | --- | --- | --- |
+| Managed | `override_redirect=false` | dwm controls placement, tags, borders, focus, and stacking | Floats above normal application windows; real fullscreen stays above it |
+| Unmanaged | `override_redirect=true` | The application controls placement and display; dwm does not tile or tag it | Explicitly matching rules raise it above normal and real fullscreen windows |
+
+Tooltips, menus, and game overlays commonly use unmanaged windows. WFHelper's
+Relic Rewards window is one example. A rule does not convert a window between
+managed and unmanaged: that normally requires an application setting or a change
+to the application's window-creation code. This stacking exception does not
+change an overlay's position, size, input handling, or focus behavior.
+
+To configure an overlay:
+
+1. Show the overlay and run `xwininfo`. Click its window and note the window ID
+   and `Override Redirect State`: `yes` means unmanaged; `no` means managed.
+   Click-through overlays may select the application underneath instead. In
+   that case, run `xwininfo -root -tree`, find the overlay by title, then inspect
+   its ID with `xwininfo -id 0xWINDOW_ID`.
+2. Inspect that same window's identity and state, replacing the placeholder ID:
+
+   ```sh
+   xprop -id 0xWINDOW_ID WM_CLASS WM_NAME _NET_WM_NAME _NET_WM_STATE
+   ```
+
+   `WM_CLASS` lists the instance first and class second. Prefer the overlay's
+   `_NET_WM_NAME` title when present; otherwise use `WM_NAME`. Check the covered
+   application's `_NET_WM_STATE` too if needed: even borderless games can request
+   `_NET_WM_STATE_FULLSCREEN`.
+3. Add a narrow class-and-title rule inside `rules = [...]` in
+   `${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/window-rules.toml`. For example:
+
+   ```toml
+   { class="wfhelper", title="WFHelper Relic Rewards", alwaysontop=1 },
+   ```
+
+   For another overlay, replace those strings with its actual class and title.
+   Avoid a class-only rule when the same application has other windows that
+   should not stay on top.
+4. Save the file. Unmanaged overlay rules reload live, including for already
+   visible overlays. For a managed window, close and reopen that window to
+   ensure its creation-time rules apply. Unmanaged windows only use the stacking
+   field; tag, monitor, and floating fields do not manage these surfaces.
+
+Matching uses case-sensitive substrings. All supplied identity fields must
+match, the last matching rule wins, and a matching rule with omitted
+`alwaysontop` resets it to zero. To remove an unmanaged overlay's fullscreen
+exception, remove its rule or set `alwaysontop=0`; its ordinary application
+stacking hints still apply.
+
+New configurations include the WFHelper rule. Upgrades preserve existing user
+rules, so add the entry manually to an existing file. After installing the dwm
+version that introduces unmanaged overlay rules, log out and back in once to
+activate the binary; a configuration reload alone cannot update running code.
+
+Ordinary managed always-on-top windows and application `_NET_WM_STATE_ABOVE`
+hints retain their existing priority below real fullscreen; those hints alone
+do not opt into this exception. If a managed overlay must appear over an
+application requesting fullscreen, use the application's windowed mode or try
+fake fullscreen (`Super+Shift+Y`) while that application is focused. Fake
+fullscreen can change the application's layout. Changing the overlay application
+to create an unmanaged window is another development option, but it must then
+handle its own positioning and input behavior.
+
+Rules in `config.h` let you assign windows to specific tags or force float:
+
+```c
+/* class      instance  title   tags mask  isfloating  isterminal  noswallow  monitor */
+{ "Gimp",     NULL,     NULL,   0,         1,          0,           0,        -1 },
+{ "Firefox",  NULL,     NULL,   1 << 1,    0,          0,          -1,        -1 },
+```
+
+---
+
+## hotkeys.toml — Live Keybinds
+
+Add or change bindings without recompiling. Save the file and they apply instantly.
+
+```toml
+[vars]
+terminal = "alacritty"
+webapp   = "webapp-launch"
+
+keys = [
+  { mod="SUPER",       key="x",  desc="Terminal",    func="spawn", exec=["$terminal"] },
+  { mod="SUPER SHIFT", key="f",  desc="Firefox",     func="spawn", exec=["firefox"] },
+]
+```
+
+The default binding launches Alacritty directly. The `dwm-terminal` helper is
+available to delegated tools that need a terminal selection fallback; it also
+prefers Alacritty and opens the emulator directly by default. Explicit
+arguments such as `dwm-terminal -e command` retain their direct execution
+contract.
+
+Thunar's seeded **Open Terminal Here** action launches Alacritty directly in
+the selected directory, matching the normal `Super` + `X` default. Existing
+Thunar custom actions are preserved during installation and upgrades.
+
+Set `DWM_TERMINAL` to choose another emulator for `dwm-terminal`. Herdr is an
+optional layer: install it explicitly, set `DWM_HERDR=1`, and run
+`dwm-terminal`. Set `DWM_HERDR_COMMAND` to select a different Herdr binary.
+
+Default applications use freedesktop settings. Run `dwm-default-apps browsers`
+to list browser desktop files, `dwm-default-apps set-browser firefox.desktop`
+to set the default browser, or `dwm-default-apps set-mime <mime> <desktop-id>`
+for other file types.
+
+Display profiles are optional files under
+`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/display-profiles`. Use
+`dwm-display-profile template` to print the format, `dwm-display-profile list`
+to show profiles, and `dwm-display-profile apply <name>` to run the profile
+through `xrandr`.
+
+For persistent Xorg configuration, run `dwm-display-setup`. The interactive
+wizard detects connected outputs and their exact advertised timings, then asks
+for resolution, refresh rate, rotation, absolute position, and the primary
+display. It checks whether the active Xorg driver exposes compatible TearFree
+support or the NVIDIA Full Composition Pipeline and enables only the compatible
+default. The proposed layout is applied as a live preview and automatically
+restored unless it is confirmed. Advanced calls may pass
+`--force-full-composition-pipeline off` to disable the NVIDIA default; forcing
+it on with an incompatible kernel or Xorg driver is rejected.
+
+Accepted layouts are installed as the isolated managed fragment
+`/etc/X11/xorg.conf.d/90-dwm-titus-display.conf`; existing Xorg files are not
+replaced. Each change creates a versioned backup. Use
+`dwm-display-setup rollback` to restore the newest backup, or
+`dwm-display-setup status` to inspect the managed file and current layout.
+Advanced users can pass an existing display-profile file to
+`dwm-display-setup generate`, `preview`, or `install`.
+For noninteractive session changes, `dwm-display-setup capture` prints the
+current complete RandR profile, `dwm-display-setup validate <profile>` checks a
+profile with `xrandr --dryrun`, and `dwm-display-setup apply <profile>` changes
+the current X11 layout after validation.
+
+The Settings Displays page uses the same profile grammar and validation through
+`dwm-settings-display`. Named profiles remain user-owned under the XDG path.
+Installing one persistently requires explicit confirmation and authorization;
+only the root-owned helper under `${PREFIX}/libexec/dwm-titus/` may update the
+managed Xorg fragment. Legacy profiles that omit complete position or rotation
+state remain usable with `dwm-display-profile`, but Settings will not preview or
+install them until they are resaved as a complete layout.
+
+Per-device input values kept in Settings are stored in
+`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/input-settings.conf`. The
+event-driven input provider uses a hardware serial or path when available,
+re-resolves that identity before every change, and skips a disconnected device
+rather than applying its settings to another XInput ID. Session startup runs
+`dwm-settings-input apply-saved` and starts an event-driven, debounced hotplug
+replay so returning devices regain saved values. Repeating the apply is safe.
+The replay watcher is scoped to the owning dwm process and exits at logout,
+including when dwm was launched through `startx`.
+The same file stores fixed `accessx` records for session-wide accessibility
+shortcuts, sticky keys, slow keys, bounce keys, and mouse keys. These records
+are reapplied through `xkbset` at session startup and do not depend on a device
+identity or hotplug event.
+
+Managed notification policy is stored in
+`${XDG_CONFIG_HOME:-$HOME/.config}/dwm-titus/notification-settings.json`.
+Settings offers only fixed Do Not Disturb and ordinary-popup duration values.
+Do Not Disturb keeps every notification in history, suppresses only low and
+normal urgency popups, and never suppresses critical urgency. Reset restores
+Do Not Disturb off and the six-second ordinary duration.
+
+Power settings are managed from Control Center -> Power. The generated
+`power.conf` is authoritative once created and persists screen DPMS state,
+display-off timing, and automatic idle and suspend locking. Startup reapplies
+this file before background session services are launched. Manual locking
+remains available when automatic locking is disabled. The screen locker runs
+only while automatic locking is enabled or for the duration of an explicit
+manual lock, so DPMS display-off events remain independent from locking.
+External `loginctl lock-session` requests are forwarded to `dwm-lock` by an
+event-driven session listener. Until `power.conf` exists, dwm-titus leaves any
+user or Fedora-managed locker untouched.
+
+### Modifier Syntax
+
+Use space-separated modifiers: `"SUPER"`, `"SUPER SHIFT"`, `"SUPER CTRL"`, `"SUPER CTRL SHIFT"`.
+
+### Available Functions
+
+| `func` | Parameters | Description |
+|--------|-----------|-------------|
+| `spawn` | `exec=[...]` or `cmd="..."` | Run a program |
+| `killclient` | — | Close focused window |
+| `zoom` | — | Promote/demote master |
+| `focusstack` | `i=1` or `i=-1` | Focus next/prev window |
+| `movestack` | `i=1` or `i=-1` | Reorder in stack |
+| `incnmaster` | `i=1` or `i=-1` | Change master count |
+| `setmfact` | `f=0.05` or `f=-0.05` | Resize master area |
+| `setcfact` | `f=0.25` / `f=-0.25` / `f=0.00` | Resize window slot |
+| `setlayout` | `layout_idx=0/1/2` | 0=tile, 1=float, 2=monocle |
+| `togglefloating` | — | Float/tile window |
+| `fullscreen` | — | Toggle monocle focus mode and the bar |
+| `togglefakefullscreen` | — | Fullscreen with bar |
+| `togglebar` | — | Show/hide bar |
+| `focusmon` | `i=1` or `i=-1` | Focus monitor |
+| `tagmon` | `i=1` or `i=-1` | Send window to monitor |
+| `view` | `ui=-1` = all tags | Switch tag |
+| `cyclelayout` | `i=1` or `i=-1` | Next/previous keyboard layout |
+| `quit` | — | Exit dwm |
+
+The `fullscreen` hotkey function toggles the monocle layout and the bar; it does
+not request EWMH fullscreen. Use a `fullscreen=1` window rule, or let the
+application request fullscreen, for real per-window fullscreen.
+
+### Tag Bindings
+
+Tag bindings auto-generate all four variants (switch, toggle-view, move, toggle-tag):
+
+```toml
+tag_keys = [
+  { key="1", tag=0 },
+  { key="2", tag=1 },
+]
+```
+
+---
+
+## Notes on XDG Autostart
+
+Recommend using Flatpak to install programs on startup:
+
+```sh
+flatpak install flathub io.github.flattool.Ignition
+```
+
+or you can create your own .desktop file in ~/.config/autostart/
+
+`set-refresh.desktop` Example:
+
+```ini
+[Desktop Entry]
+Type=Application
+Exec=xrandr --output HDMI-0 --primary --mode 1920x1080 --pos 0x0 --rotate normal --rate 120 --output DP-0 --off --output DP-1 --off --output DP-2 --off --output DP-3 --off --output DP-4 --off --output DP-5 --off
+Hidden=false
+X-GNOME-Autostart-enabled=true
+Name=Set Refresh
+```

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=X-GNOME-Metatheme
+Name=Dwm-qud
+Comment=dwm-titus qud application palette
+
+[X-GNOME-Metatheme]
+GtkTheme=Dwm-qud

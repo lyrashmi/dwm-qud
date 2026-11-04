@@ -1,0 +1,704 @@
+#!/bin/sh
+set -eu
+
+usage() {
+	printf '%s\n' "usage: dwm-quickshell-network snapshot [--rescan yes|no]|status|devices|connections|wifi-scan [--rescan yes|no] [ifname]|wifi-connect <ifname> <bssid> <ssid> [--password-stdin <security>]|wifi-connect-hidden <ifname|-> <ssid> <none|wep|wpa-psk|sae> [--password-stdin]|connect <uuid>|disconnect <device>|forget <uuid>|monitor|editor" >&2
+	exit 2
+}
+
+run_bounded() {
+	duration=$1
+	shift
+	status=0
+	timeout --signal=TERM --kill-after=2 "$duration" "$@" || status=$?
+	if [ "$status" -eq 124 ]; then
+		printf 'operation timed out after %s seconds\n' "$duration" >&2
+	fi
+	return "$status"
+}
+
+run_parent_bound() {
+	parent_pid=$PPID
+	parent_identity=$(sed 's/^.*) //' "/proc/$parent_pid/stat" 2>/dev/null |
+		awk '{ print $1 " " $20 }') || return 1
+	[ -n "$parent_identity" ] || return 1
+	case $parent_identity in
+	Z\ *) return 1 ;;
+	esac
+	"$@" &
+	child_pid=$!
+
+	cleanup_parent_bound() {
+		kill -TERM "$child_pid" 2>/dev/null || :
+		kill -TERM "${watchdog_pid:-}" 2>/dev/null || :
+	}
+	trap cleanup_parent_bound EXIT HUP INT TERM
+	(
+		while :; do
+			current_identity=$(sed 's/^.*) //' "/proc/$parent_pid/stat" 2>/dev/null |
+				awk '{ print $1 " " $20 }' || true)
+			[ "$current_identity" = "$parent_identity" ] || {
+				kill -TERM "$child_pid" 2>/dev/null || :
+				exit 0
+			}
+			sleep 0.25
+		done
+	) &
+	watchdog_pid=$!
+
+	status=0
+	wait "$child_pid" || status=$?
+	kill -TERM "$watchdog_pid" 2>/dev/null || :
+	wait "$watchdog_pid" 2>/dev/null || :
+	trap - EXIT HUP INT TERM
+	return "$status"
+}
+
+need_nmcli() {
+	if ! command -v nmcli >/dev/null 2>&1; then
+		printf '%s\n' "nmcli not found" >&2
+		exit 127
+	fi
+}
+
+nmcli_tab_from_stdin() {
+	awk '
+			{
+				field = ""
+				output = ""
+				count = 0
+				escaped = 0
+				for (i = 1; i <= length($0); i++) {
+					char = substr($0, i, 1)
+					if (escaped) {
+						field = field char
+						escaped = 0
+					} else if (char == "\\") {
+						escaped = 1
+					} else if (char == ":") {
+						output = output (count == 0 ? "" : "\t") field
+						count++
+						field = ""
+					} else {
+						field = field char
+					}
+				}
+				print output (count == 0 ? "" : "\t") field
+			}
+		'
+}
+
+nmcli_tab() {
+	output=$(nmcli --terse --escape yes "$@") || return
+	printf '%s' "$output" | nmcli_tab_from_stdin
+}
+
+status() {
+	need_nmcli
+
+	output=$(nmcli_tab -f DEVICE,TYPE,STATE device status 2>/dev/null) || return
+	printf '%s\n' "$output" | awk -F '\t' '
+			$2 != "loopback" && $3 == "connected" {
+				print "NET " $1
+				found = 1
+				exit
+			}
+			END {
+				if (!found) {
+					print "NET offline"
+				}
+			}
+		'
+}
+
+devices() {
+	need_nmcli
+	output=$(nmcli_tab -f DEVICE,TYPE,STATE,CONNECTION device status) || return
+	printf '%s\n' "$output" | awk -F '\t' '$2 != "loopback"'
+}
+
+connections() {
+	need_nmcli
+
+	active=$(mktemp "${TMPDIR:-/tmp}/dwm-network-active.XXXXXX")
+	saved=$(mktemp "${TMPDIR:-/tmp}/dwm-network-saved.XXXXXX")
+
+	if ! nmcli_tab -f NAME,UUID,TYPE,DEVICE connection show --active >"$active" ||
+		! nmcli_tab -f NAME,UUID,TYPE connection show >"$saved"; then
+		rm -f "$active" "$saved"
+		return 1
+	fi
+	awk -F '\t' -v OFS='\t' '
+			NR == FNR {
+				active[$2] = 1
+				device[$2] = $4
+				next
+			}
+			$3 != "loopback" {
+				print $1, $2, $3, (active[$2] ? "yes" : "no"), device[$2]
+			}
+		' "$active" "$saved"
+	status=$?
+	rm -f "$active" "$saved"
+	return "$status"
+}
+
+wifi_scan() {
+	need_nmcli
+
+	rescan=no
+	ifname=
+
+	while [ "$#" -gt 0 ]; do
+		case "$1" in
+		--rescan)
+			[ "$#" -ge 2 ] || usage
+			case "$2" in
+			yes | no | auto)
+				rescan=$2
+				;;
+			*)
+				usage
+				;;
+			esac
+			shift 2
+			;;
+		*)
+			[ -z "$ifname" ] || usage
+			ifname=$1
+			shift
+			;;
+		esac
+	done
+
+	if [ -n "$ifname" ]; then
+		output=$(run_bounded 10 nmcli --terse --escape yes -f IN-USE,BSSID,SSID,SIGNAL,SECURITY,CHAN,DEVICE \
+			device wifi list ifname "$ifname" --rescan "$rescan") || return
+	else
+		output=$(run_bounded 10 nmcli --terse --escape yes -f IN-USE,BSSID,SSID,SIGNAL,SECURITY,CHAN,DEVICE \
+			device wifi list --rescan "$rescan") || return
+	fi
+	printf '%s' "$output" | nmcli_tab_from_stdin
+}
+
+wifi_connect() {
+	need_nmcli
+	if [ "$#" -ne 3 ] && [ "$#" -ne 5 ]; then
+		usage
+	fi
+
+	ifname=$1
+	bssid=$2
+	ssid=$3
+
+	if [ -z "$ifname" ] || [ -z "$bssid" ] || [ -z "$ssid" ]; then
+		usage
+	fi
+
+	if [ "$#" -eq 5 ]; then
+		[ "$4" = "--password-stdin" ] || usage
+		security=$5
+		case $security in
+		*802.1X* | *802.1x* | *EAP* | *Enterprise*)
+			printf '%s\n' "enterprise Wi-Fi must be configured in the delegated NetworkManager editor" >&2
+			exit 2
+			;;
+		esac
+		key_mgmt=wpa-psk
+		secret_property=802-11-wireless-security.psk
+		wep_key_type=
+		case "$security" in
+		*WEP*)
+			key_mgmt=none
+			secret_property=802-11-wireless-security.wep-key0
+			;;
+		*WPA3*)
+			case "$security" in
+			*WPA2*) ;;
+			*) key_mgmt=sae ;;
+			esac
+			;;
+		esac
+
+		umask 077
+		password_file=$(mktemp "${TMPDIR:-/tmp}/dwm-network-password.XXXXXX")
+		connection_uuid=
+		cleanup_wifi_connect() {
+			rm -f "$password_file"
+			if [ -n "$connection_uuid" ]; then
+				nmcli connection delete uuid "$connection_uuid" >/dev/null 2>&1 || :
+			fi
+		}
+		trap cleanup_wifi_connect EXIT
+		trap 'cleanup_wifi_connect; exit 1' HUP INT TERM
+
+		if ! IFS= read -r password || [ -z "$password" ]; then
+			printf '%s\n' "Wi-Fi password required on stdin" >&2
+			exit 2
+		fi
+		if [ "$key_mgmt" = "none" ]; then
+			wep_key_type=passphrase
+			case ${#password} in
+			5 | 13)
+				wep_key_type=key
+				;;
+			10 | 26)
+				case "$password" in
+				*[!0123456789abcdefABCDEF]*) ;;
+				*) wep_key_type=key ;;
+				esac
+				;;
+			esac
+		fi
+		printf '%s:%s\n' "$secret_property" "$password" >"$password_file"
+		unset password
+
+		IFS= read -r connection_uuid </proc/sys/kernel/random/uuid
+		if [ -z "$connection_uuid" ]; then
+			printf '%s\n' "could not generate a connection UUID" >&2
+			exit 1
+		fi
+
+		set -- connection add type wifi ifname "$ifname" con-name "$ssid" ssid "$ssid" \
+			802-11-wireless.bssid "$bssid" wifi-sec.key-mgmt "$key_mgmt"
+		if [ -n "$wep_key_type" ]; then
+			set -- "$@" wifi-sec.wep-key-type "$wep_key_type"
+		fi
+		set -- "$@" connection.uuid "$connection_uuid"
+		run_bounded 90 nmcli "$@" >/dev/null
+
+		if run_bounded 90 nmcli connection up uuid "$connection_uuid" ifname "$ifname" ap "$bssid" \
+			passwd-file "$password_file"; then
+			trap - HUP INT TERM
+			connection_uuid=
+			return 0
+		else
+			status=$?
+		fi
+
+		nmcli connection delete uuid "$connection_uuid" >/dev/null 2>&1 || :
+		connection_uuid=
+		return "$status"
+	else
+		run_bounded 90 nmcli device wifi connect "$ssid" ifname "$ifname" bssid "$bssid"
+	fi
+}
+
+byte_length() (
+	LC_ALL=C
+	printf '%s' "${#1}"
+)
+
+hidden_fail() {
+	status=$1
+	shift
+	printf '%s\n' "$*" >&2
+	exit "$status"
+}
+
+hidden_wifi_device() {
+	requested=$1
+	output=$(nmcli_tab -f DEVICE,TYPE,STATE device status) || return
+	if [ "$requested" != "-" ]; then
+		if printf '%s\n' "$output" | awk -F '\t' -v device="$requested" '
+				BEGIN { found = 1 }
+				$1 == device && $2 == "wifi" { found = 0 }
+				END { exit found }
+			'; then
+			printf '%s\n' "$requested"
+			return 0
+		fi
+		hidden_fail 3 "Wi-Fi device $requested was not found"
+	fi
+	usable=$(printf '%s\n' "$output" | awk -F '\t' '
+			$2 == "wifi" && $3 != "unmanaged" && $3 != "unavailable" { print $1 }
+		')
+	case $usable in
+	"")
+		hidden_fail 3 "no Wi-Fi device is available"
+		;;
+	*"
+"*)
+		hidden_fail 3 "several Wi-Fi devices are available; choose one"
+		;;
+	esac
+	printf '%s\n' "$usable"
+}
+
+hidden_connection_name() {
+	ssid=$1
+	output=$(nmcli_tab -f NAME connection show) || return
+	names=$(printf '%s\n' "$output" | awk -F '\t' '{ print $1 }')
+	candidate=$ssid
+	number=1
+	while printf '%s\n' "$names" | grep -Fxq -e "$candidate"; do
+		number=$((number + 1))
+		if [ "$number" -gt 9 ]; then
+			hidden_fail 1 "too many profiles named $ssid"
+		fi
+		if [ "$number" -eq 2 ]; then
+			candidate="$ssid (hidden)"
+		else
+			candidate="$ssid (hidden $((number - 1)))"
+		fi
+	done
+	printf '%s\n' "$candidate"
+}
+
+hidden_error_message() {
+	ssid=$1
+	status=$2
+	error=$3
+	if [ "$status" -eq 124 ]; then
+		printf '%s\n' "operation timed out after 90 seconds"
+		return 0
+	fi
+	# nmcli runs under LC_ALL=C here; NetworkManager 1.56 prints the reason
+	# text without its numeric code, older releases may print both.
+	case $error in
+	*"(53)"* | *"Wi-Fi network could not be found"*)
+		printf '%s\n' "hidden network $ssid was not found; check the name and security type"
+		;;
+	*"(7)"* | *"(8)"* | *"(9)"* | *"(10)"* | *"(11)"* | *"Secrets were required"* | *"supplicant"*)
+		printf '%s\n' "authentication to $ssid failed; check the password and security type"
+		;;
+	*"(5)"* | *"(6)"* | *"(15)"* | *"(17)"* | *"IP configuration"* | *"DHCP"*)
+		printf '%s\n' "joined $ssid but no IP address was received"
+		;;
+	*)
+		line=$(printf '%s\n' "$error" | awk 'NF { sub(/^Error: /, ""); print; exit }')
+		printf '%s\n' "${line:-could not connect to $ssid}"
+		;;
+	esac
+}
+
+# nmcli answers every new secrets request from the same passwd-file, so a wrong
+# password makes NetworkManager retry until nmcli exits. The first "need
+# authentication" state is the initial secrets request; a second one means the
+# supplied secret was rejected, so stop the activation there.
+hidden_activate() {
+	work_dir=$1
+	shift
+	mkfifo "$work_dir/events"
+	LC_ALL=C nmcli device monitor "$ifname" >"$work_dir/events" 2>/dev/null &
+	monitor_pid=$!
+	LC_ALL=C timeout --signal=TERM --kill-after=2 90 nmcli "$@" >/dev/null 2>"$work_dir/error" &
+	activation_pid=$!
+	(
+		requests=0
+		while IFS= read -r event; do
+			case $event in
+			*"(need authentication)")
+				requests=$((requests + 1))
+				if [ "$requests" -ge 2 ]; then
+					: >"$work_dir/auth-failed"
+					kill -TERM "$activation_pid" 2>/dev/null || :
+					exit 0
+				fi
+				;;
+			esac
+		done
+	) <"$work_dir/events" &
+	watcher_pid=$!
+	status=0
+	wait "$activation_pid" || status=$?
+	activation_pid=
+	kill -TERM "$monitor_pid" "$watcher_pid" 2>/dev/null || :
+	wait "$monitor_pid" "$watcher_pid" 2>/dev/null || :
+	monitor_pid=
+	watcher_pid=
+	return "$status"
+}
+
+wifi_connect_hidden() {
+	need_nmcli
+	if [ "$#" -ne 3 ] && [ "$#" -ne 4 ]; then
+		usage
+	fi
+
+	ifname=$1
+	ssid=$2
+	security=$3
+	password_stdin=0
+	if [ "$#" -eq 4 ]; then
+		[ "$4" = "--password-stdin" ] || usage
+		password_stdin=1
+	fi
+	[ -n "$ifname" ] || usage
+
+	ssid_bytes=$(byte_length "$ssid")
+	if [ "$ssid_bytes" -lt 1 ] || [ "$ssid_bytes" -gt 32 ]; then
+		hidden_fail 2 "network name must be 1 to 32 bytes"
+	fi
+	case $ssid in
+	*[[:cntrl:]]*)
+		hidden_fail 2 "network name must not contain control characters"
+		;;
+	esac
+
+	key_mgmt=
+	secret_property=
+	case $security in
+	none) ;;
+	wpa-psk | sae)
+		key_mgmt=$security
+		secret_property=802-11-wireless-security.psk
+		;;
+	wep)
+		key_mgmt=none
+		secret_property=802-11-wireless-security.wep-key0
+		;;
+	*802.1X* | *802.1x* | *EAP* | *eap* | *Enterprise* | *enterprise*)
+		hidden_fail 2 "enterprise Wi-Fi must be configured in the delegated NetworkManager editor"
+		;;
+	*)
+		hidden_fail 2 "unknown security type: $security"
+		;;
+	esac
+	if [ -n "$secret_property" ] && [ "$password_stdin" -ne 1 ]; then
+		hidden_fail 2 "Wi-Fi password required on stdin"
+	fi
+	if [ -z "$secret_property" ] && [ "$password_stdin" -eq 1 ]; then
+		hidden_fail 2 "open networks do not take a password"
+	fi
+
+	wep_key_type=
+	if [ -n "$secret_property" ]; then
+		if ! IFS= read -r password || [ -z "$password" ]; then
+			hidden_fail 2 "Wi-Fi password required on stdin"
+		fi
+		password_bytes=$(byte_length "$password")
+		case $security in
+		wpa-psk)
+			password_valid=0
+			if [ "$password_bytes" -ge 8 ] && [ "$password_bytes" -le 63 ]; then
+				password_valid=1
+				case $password in
+				*[![:print:]]*) password_valid=0 ;;
+				esac
+				# Byte and character counts differ for non-ASCII text.
+				if [ "$password_bytes" -ne "${#password}" ]; then
+					password_valid=0
+				fi
+			elif [ "$password_bytes" -eq 64 ]; then
+				case $password in
+				*[!0123456789abcdefABCDEF]*) ;;
+				*) password_valid=1 ;;
+				esac
+			fi
+			if [ "$password_valid" -ne 1 ]; then
+				unset password
+				hidden_fail 2 "WPA password must be 8 to 63 characters or 64 hex digits"
+			fi
+			;;
+		wep)
+			wep_key_type=passphrase
+			case $password_bytes in
+			5 | 13)
+				wep_key_type=key
+				;;
+			10 | 26)
+				case "$password" in
+				*[!0123456789abcdefABCDEF]*) ;;
+				*) wep_key_type=key ;;
+				esac
+				;;
+			esac
+			;;
+		esac
+	fi
+
+	ifname=$(hidden_wifi_device "$ifname")
+	con_name=$(hidden_connection_name "$ssid")
+
+	work_dir=
+	password_file=
+	connection_uuid=
+	activation_pid=
+	monitor_pid=
+	watcher_pid=
+	cleanup_wifi_connect_hidden() {
+		for pid in $activation_pid $monitor_pid $watcher_pid; do
+			kill -TERM "$pid" 2>/dev/null || :
+		done
+		activation_pid=
+		monitor_pid=
+		watcher_pid=
+		[ -z "$work_dir" ] || rm -rf "$work_dir"
+		work_dir=
+		if [ -n "$connection_uuid" ]; then
+			nmcli connection delete uuid "$connection_uuid" >/dev/null 2>&1 || :
+		fi
+		connection_uuid=
+	}
+	trap cleanup_wifi_connect_hidden EXIT
+	trap 'cleanup_wifi_connect_hidden; exit 1' HUP INT TERM
+
+	runtime_dir=${TMPDIR:-/tmp}
+	if [ -n "${XDG_RUNTIME_DIR:-}" ] && [ -d "$XDG_RUNTIME_DIR" ] && [ -w "$XDG_RUNTIME_DIR" ]; then
+		runtime_dir=$XDG_RUNTIME_DIR
+	fi
+	umask 077
+	work_dir=$(mktemp -d "$runtime_dir/dwm-network-hidden.XXXXXX")
+	if [ -n "$secret_property" ]; then
+		password_file=$work_dir/password
+		printf '%s:%s\n' "$secret_property" "$password" >"$password_file"
+		unset password
+	fi
+
+	IFS= read -r new_uuid </proc/sys/kernel/random/uuid
+	[ -n "$new_uuid" ] || hidden_fail 1 "could not generate a connection UUID"
+
+	set -- connection add type wifi con-name "$con_name" ssid "$ssid" \
+		802-11-wireless.hidden yes connection.uuid "$new_uuid"
+	if [ -n "$key_mgmt" ]; then
+		set -- "$@" wifi-sec.key-mgmt "$key_mgmt"
+	fi
+	if [ -n "$wep_key_type" ]; then
+		set -- "$@" wifi-sec.wep-key-type "$wep_key_type"
+	fi
+	connection_uuid=$new_uuid
+	status=0
+	error=$(run_bounded 90 nmcli "$@" 2>&1 >/dev/null) || status=$?
+	if [ "$status" -ne 0 ]; then
+		hidden_fail "$status" "$(hidden_error_message "$ssid" "$status" "$error")"
+	fi
+
+	set -- connection up uuid "$connection_uuid" ifname "$ifname"
+	if [ -n "$password_file" ]; then
+		set -- "$@" passwd-file "$password_file"
+	fi
+	status=0
+	hidden_activate "$work_dir" "$@" || status=$?
+	if [ "$status" -eq 0 ]; then
+		trap - HUP INT TERM
+		connection_uuid=
+		return 0
+	fi
+	if [ -e "$work_dir/auth-failed" ]; then
+		hidden_fail 4 "authentication to $ssid failed; check the password and security type"
+	fi
+	hidden_fail "$status" "$(hidden_error_message "$ssid" "$status" "$(cat "$work_dir/error")")"
+}
+
+connect_uuid() {
+	need_nmcli
+	[ "$#" -eq 1 ] || usage
+	run_bounded 90 nmcli connection up uuid "$1"
+}
+
+disconnect_device() {
+	need_nmcli
+	[ "$#" -eq 1 ] || usage
+	run_bounded 15 nmcli device disconnect "$1"
+}
+
+forget_uuid() {
+	need_nmcli
+	[ "$#" -eq 1 ] || usage
+	run_bounded 15 nmcli connection delete uuid "$1"
+}
+
+snapshot() {
+	printf 'connectivity-protocol\t1\t0\n'
+
+	if ! command -v nmcli >/dev/null 2>&1; then
+		printf 'provider\tnetwork\tunavailable\tread-only\tnmcli is not installed\n'
+		return 0
+	fi
+
+	work=$(mktemp -d "${TMPDIR:-/tmp}/dwm-network-snapshot.XXXXXX")
+	trap 'rm -rf "$work"' EXIT HUP INT TERM
+	if ! devices >"$work/devices" 2>"$work/error" ||
+		! connections >"$work/connections" 2>>"$work/error"; then
+		printf 'provider\tnetwork\tunavailable\tread-only\tNetworkManager service is unavailable\n'
+		return 0
+	fi
+
+	if wifi_scan "$@" >"$work/wifi" 2>>"$work/error"; then
+		printf 'provider\tnetwork\tavailable\tdelegated\tNetworkManager state and user-authorized actions\n'
+	else
+		: >"$work/wifi"
+		printf 'provider\tnetwork\trestricted\tdelegated\tWi-Fi scanning is unavailable; other NetworkManager state remains readable\n'
+	fi
+	awk -F '\t' -v OFS='\t' 'NF >= 3 { connection = $4 != "" ? $4 : "-"; print "network-device", $1, $2, $3, connection }' "$work/devices"
+	awk -F '\t' -v OFS='\t' 'NF >= 4 { device = $5 != "" ? $5 : "-"; print "network-profile", $1, $2, $3, $4, device }' "$work/connections"
+	awk -F '\t' -v OFS='\t' 'NF >= 7 && $3 != "" { active = $1 != "" ? $1 : "-"; print "wifi-network", active, $2, $3, $4, $5, $6, $7 }' "$work/wifi"
+}
+
+monitor() {
+	need_nmcli
+	run_parent_bound nmcli monitor
+}
+
+editor() {
+	if ! command -v nm-connection-editor >/dev/null 2>&1; then
+		printf '%s\n' "nm-connection-editor not found" >&2
+		exit 127
+	fi
+
+	script_dir=$(
+		unset CDPATH
+		cd -- "$(dirname -- "$0")" && pwd
+	)
+	session_launcher=$script_dir/dwm-session-launch
+	if [ ! -x "$session_launcher" ]; then
+		session_launcher=$(command -v dwm-session-launch 2>/dev/null || true)
+	fi
+	if [ -n "$session_launcher" ]; then
+		exec "$session_launcher" nm-connection-editor
+	fi
+	exec nm-connection-editor
+}
+
+[ "$#" -ge 1 ] || usage
+
+command=$1
+shift
+
+case "$command" in
+snapshot)
+	snapshot "$@"
+	;;
+status)
+	[ "$#" -eq 0 ] || usage
+	status
+	;;
+devices)
+	[ "$#" -eq 0 ] || usage
+	devices
+	;;
+connections)
+	[ "$#" -eq 0 ] || usage
+	connections
+	;;
+wifi-scan)
+	wifi_scan "$@"
+	;;
+wifi-connect)
+	wifi_connect "$@"
+	;;
+wifi-connect-hidden)
+	wifi_connect_hidden "$@"
+	;;
+connect)
+	connect_uuid "$@"
+	;;
+disconnect)
+	disconnect_device "$@"
+	;;
+forget)
+	forget_uuid "$@"
+	;;
+monitor)
+	[ "$#" -eq 0 ] || usage
+	monitor
+	;;
+editor)
+	[ "$#" -eq 0 ] || usage
+	editor
+	;;
+*)
+	usage
+	;;
+esac

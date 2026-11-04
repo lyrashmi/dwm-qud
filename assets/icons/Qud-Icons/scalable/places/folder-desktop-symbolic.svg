@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="64" height="64" viewBox="0 0 64 64">
+
+  <!-- Folder body -->
+  <path
+    d="M6 17
+       C6 14.8 7.8 13 10 13
+       H25 L31 20
+       H54 C56.2 20 58 21.8 58 24
+       V49 C58 51.2 56.2 53 54 53
+       H10 C7.8 53 6 51.2 6 49 Z"
+    fill="#98875f"/>
+
+  <!-- Folder tab -->
+  <path
+    d="M10 13 H25 L31 20 H6 V17
+       C6 14.8 7.8 13 10 13 Z"
+    fill="#b6a16d"/>
+
+  <!-- Front panel -->
+  <path
+    d="M9 26 H55 L52 48
+       C51.8 49.2 50.8 50 49.5 50
+       H14.5 C13.2 50 12.2 49.2 12 48 Z"
+    fill="#a18e61"/>
+
+</svg>

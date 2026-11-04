@@ -1,0 +1,12 @@
+[Icon Theme]
+Name=Qud-Icons
+Comment=Minimal golden folder icons for Caves of Qud
+Inherits=Adwaita,hicolor
+Directories=scalable/places
+
+[scalable/places]
+Size=48
+Type=Scalable
+MinSize=16
+MaxSize=512
+Context=Places

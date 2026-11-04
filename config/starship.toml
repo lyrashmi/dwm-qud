@@ -1,0 +1,52 @@
+# ==========================================
+# Starship – QUD Theme
+# ==========================================
+
+add_newline = true
+
+format = """
+[╭─](#98875f)$directory$git_branch$git_status$cmd_duration
+[╰─](#98875f)$character"""
+
+# Directory
+[directory]
+style = "bold #b1c9c3"
+format = "[$path]($style) "
+truncation_length = 3
+truncate_to_repo = true
+truncation_symbol = "…/"
+read_only = " "
+read_only_style = "#d74200"
+
+# Git branch
+[git_branch]
+symbol = " "
+style = "bold #cfc041"
+format = "[$symbol$branch]($style) "
+
+# Git status
+[git_status]
+style = "#d74200"
+format = "[$all_status$ahead_behind]($style) "
+modified = "!"
+staged = "+"
+untracked = "?"
+deleted = "✘"
+renamed = "»"
+conflicted = "="
+ahead = "⇡"
+behind = "⇣"
+diverged = "⇕"
+
+# Command duration
+[cmd_duration]
+min_time = 2000
+format = "[$duration]($style) "
+style = "#98875f"
+show_milliseconds = false
+
+# Prompt character
+[character]
+success_symbol = "[❯](bold #00c420)"
+error_symbol = "[❯](bold #d74200)"
+vimcmd_symbol = "[❮](bold #cfc041)"

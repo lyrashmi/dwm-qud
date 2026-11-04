@@ -1,0 +1,120 @@
+
+/* =========================================
+   Caves of Qud – GTK 4
+   ========================================= */
+
+/* Main palette */
+@define-color window_bg_color #0f3b3a;
+@define-color window_fg_color #b1c9c3;
+
+@define-color view_bg_color #0f3b3a;
+@define-color view_fg_color #b1c9c3;
+
+@define-color headerbar_bg_color #155352;
+@define-color headerbar_fg_color #b1c9c3;
+
+@define-color sidebar_bg_color #0f3b3a;
+@define-color sidebar_fg_color #b1c9c3;
+
+@define-color card_bg_color #155352;
+@define-color card_fg_color #b1c9c3;
+
+@define-color popover_bg_color #155352;
+@define-color popover_fg_color #b1c9c3;
+
+@define-color dialog_bg_color #0f3b3a;
+@define-color dialog_fg_color #b1c9c3;
+
+/* Accents */
+@define-color accent_color #98875f;
+@define-color accent_bg_color #155352;
+@define-color accent_fg_color #ffffff;
+
+@define-color borders #98875f;
+@define-color headerbar_border_color #98875f;
+
+/* Status colours */
+@define-color success_color #00c420;
+@define-color warning_color #e99f10;
+@define-color error_color #d74200;
+
+/* =========================================
+   Window and general backgrounds
+   ========================================= */
+
+window,
+.background {
+    background-color: @window_bg_color;
+    color: @window_fg_color;
+}
+
+/* Header and toolbar */
+headerbar,
+.titlebar {
+    background-color: @headerbar_bg_color;
+    color: @headerbar_fg_color;
+    border-color: @borders;
+}
+
+/* Sidebar */
+.navigation-sidebar {
+    background-color: @sidebar_bg_color;
+    color: @sidebar_fg_color;
+}
+
+.navigation-sidebar row:selected {
+    background-color: @accent_bg_color;
+    color: @accent_fg_color;
+}
+
+/* File and folder views */
+.view,
+.view text {
+    background-color: @view_bg_color;
+    color: @view_fg_color;
+}
+
+.view:selected,
+.view text:selected {
+    background-color: @accent_bg_color;
+    color: @accent_fg_color;
+}
+
+/* Buttons */
+button {
+    color: @window_fg_color;
+}
+
+button:checked,
+button.suggested-action {
+    background-color: @accent_bg_color;
+    color: @accent_fg_color;
+}
+
+/* Search fields and text entries */
+entry,
+.search {
+    background-color: @view_bg_color;
+    color: @view_fg_color;
+    border-color: @borders;
+}
+
+/* Popovers and menus */
+popover,
+popover contents,
+menu {
+    background-color: @popover_bg_color;
+    color: @popover_fg_color;
+}
+
+/* Separators */
+separator {
+    background-color: @borders;
+}
+
+
+/* Square client-side window decorations */
+window.csd,
+window.solid-csd {
+    border-radius: 0;
+}

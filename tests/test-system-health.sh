@@ -1,0 +1,299 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+HELPER=$ROOT_DIR/scripts/dwm-system-health
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+
+mkdir -p "$work/bin" "$work/home/.config/dwm-titus" "$work/home/.config/quickshell"
+printf 'ID=fedora\nPRETTY_NAME="Fedora Test"\n' >"$work/os-release"
+: >"$work/home/.config/dwm-titus/hotkeys.toml"
+: >"$work/home/.config/dwm-titus/themes.toml"
+: >"$work/home/.config/dwm-titus/window-rules.toml"
+: >"$work/home/.config/quickshell/shell.qml"
+
+cat >"$work/bin/dnf" <<'SCRIPT'
+#!/bin/sh
+printf 'package consistency problem\n'
+exit 1
+SCRIPT
+
+cat >"$work/bin/xclip" <<'SCRIPT'
+#!/bin/sh
+cat >"${DWM_HEALTH_XCLIP_OUTPUT:?}"
+SCRIPT
+
+cat >"$work/bin/quickshell" <<'SCRIPT'
+#!/bin/sh
+printf '%s\n' 'quickshell pre-release, revision: dacfa9de829ac7cb173825f593236bf2c21f637e'
+SCRIPT
+
+cat >"$work/bin/systemctl" <<'SCRIPT'
+#!/bin/sh
+case " $* " in
+*" --user --failed "*) printf 'user-broken.service loaded failed failed Broken user service\n' ;;
+*" --user restart -- user-broken.service "*) printf '%s\n' "$*" >>"$DWM_HEALTH_SYSTEMCTL_LOG" ;;
+*) exit 1 ;;
+esac
+SCRIPT
+cat >"$work/bin/df" <<'SCRIPT'
+#!/bin/sh
+[ "${DWM_TEST_DF_FAIL:-0}" != 1 ] || exit 1
+exec /usr/bin/df "$@"
+SCRIPT
+chmod +x "$work/bin/df"
+
+cat >"$work/bin/findmnt" <<'SCRIPT'
+#!/bin/sh
+case "$*" in
+'-n -o FSTYPE /sys/firmware/efi/efivars') printf 'efivarfs\n' ;;
+'-n -o USE% /sys/firmware/efi/efivars') printf '99%%\n' ;;
+*) exec /usr/bin/findmnt "$@" ;;
+esac
+SCRIPT
+chmod +x "$work/bin/findmnt"
+chmod +x "$work/bin/dnf" "$work/bin/quickshell" "$work/bin/systemctl" "$work/bin/xclip"
+
+DWM_HEALTH_XCLIP_OUTPUT="$work/clipboard.txt" \
+	PATH="$work/bin:/usr/bin:/bin" \
+	"$HELPER" share-evidence copy journal-errors "Boot journal errors" "2 current-boot entries" \
+	"first boot error | second boot error" >"$work/copy.out"
+grep -Fq 'Copied Boot journal errors to the clipboard' "$work/copy.out"
+grep -Fq 'Boot journal errors' "$work/clipboard.txt"
+grep -Fq 'first boot error' "$work/clipboard.txt"
+grep -Fq 'second boot error' "$work/clipboard.txt"
+
+mkdir -p "$work/exports"
+DWM_HEALTH_EXPORT_DIR="$work/exports" \
+	"$HELPER" share-evidence export journal-errors "Boot journal errors" "2 current-boot entries" \
+	"first boot error | second boot error" >"$work/export-boot.out"
+DWM_HEALTH_EXPORT_DIR="$work/exports" \
+	"$HELPER" share-evidence export kernel-errors "Kernel errors" "1 current-boot entry" \
+	"kernel test error" >"$work/export-kernel.out"
+boot_exports=("$work/exports"/boot*.txt)
+kernel_exports=("$work/exports"/kernel-errors*.txt)
+[[ -f ${boot_exports[0]} && -f ${kernel_exports[0]} ]]
+grep -Fq 'second boot error' "${boot_exports[0]}"
+grep -Fq 'kernel test error' "${kernel_exports[0]}"
+[[ $(stat -c %a -- "${boot_exports[0]}") == 600 ]]
+
+if "$HELPER" share-evidence export critical-kernel-events "Critical" "1 entry" "test" 2>"$work/share-invalid.err"; then
+	printf 'unsupported evidence export unexpectedly succeeded\n' >&2
+	exit 1
+fi
+grep -Fq 'unsupported evidence record' "$work/share-invalid.err"
+
+HOME="$work/home" \
+	XDG_CONFIG_HOME="$work/home/.config" \
+	DWM_HEALTH_OS_RELEASE="$work/os-release" \
+	DWM_HEALTH_COMMAND_TIMEOUT=2 \
+	DWM_HEALTH_SYSTEMCTL_LOG="$work/systemctl.log" \
+	PATH="$work/bin:/usr/bin:/bin" \
+	"$HELPER" scan-user >"$work/user.tsv"
+
+awk -F '\t' 'NF != 10 { print "invalid field count at line " NR > "/dev/stderr"; exit 1 }' "$work/user.tsv"
+grep -Fq $'meta\toverview\tinfo\tscan-user' "$work/user.tsv"
+grep -Fq $'check\tresources\t' "$work/user.tsv"
+grep -Fq $'check\tstorage\t' "$work/user.tsv"
+grep -Fq $'check\tnetwork\t' "$work/user.tsv"
+grep -Fq $'check\tdependencies\twarn\tpackage-database' "$work/user.tsv"
+grep -Fq $'check\tdesktop\tok\tquickshell-version\tQuickshell\tAvailable' "$work/user.tsv"
+grep -Fq $'check\tservices\twarn\tuser-failed-user-broken-service\tuser-broken.service (user)' "$work/user.tsv"
+grep -Fq $'manage-user-service|user-broken.service\tService actions\tuser' "$work/user.tsv"
+grep -Fq $'meta\toverview\tok\tscan-user-complete' "$work/user.tsv"
+# Missing user files cannot be repaired by the package-only action.
+awk -F '\t' '$4 == "xinitrc" || $4 == "quickshell-config" { found++; if ($8 != "") exit 1 } END { if (found != 2) exit 1 }' "$work/user.tsv"
+
+# Non-package optional gaps must not emit install-dependencies
+grep -Fq $'check\tdependencies\twarn\txinitrc\t' "$work/user.tsv"
+if awk -F '\t' '$4 == "xinitrc" && $8 == "install-dependencies" { found=1 } END { exit !found }' "$work/user.tsv"; then
+	printf 'xinitrc unexpectedly offered install-dependencies repair action\n' >&2
+	exit 1
+fi
+awk -F '\t' '$4 == "xinitrc" && $8 == "" { found=1 } END { exit !found }' "$work/user.tsv"
+
+# Validate DNF audit timeout explanation
+cat >"$work/bin/dnf" <<'SCRIPT'
+#!/bin/sh
+sleep 5
+exit 0
+SCRIPT
+HOME="$work/home" \
+	DWM_HEALTH_OS_RELEASE="$work/os-release" \
+	DWM_HEALTH_COMMAND_TIMEOUT=2 \
+	DWM_HEALTH_PACKAGE_DB_TIMEOUT=1 \
+	PATH="$work/bin:/usr/bin:/bin" \
+	"$HELPER" scan-user >"$work/timeout.tsv"
+grep -Fq $'check\tdependencies\twarn\tpackage-database\tPackage database\tPackage audit needs attention\tPackage database audit timed out after 1s' "$work/timeout.tsv"
+
+# Reject invalid/unbounded audit durations and preserve valid positive seconds.
+cat >"$work/bin/dnf" <<'SCRIPT'
+#!/bin/sh
+printf 'audit ran\n' >>"${DWM_AUDIT_LOG:?}"
+SCRIPT
+cat >"$work/bin/timeout" <<'SCRIPT'
+#!/bin/sh
+duration=$1
+shift
+if [ "$1" = dnf ]; then
+    printf '%s\n' "$duration" >>"${DWM_AUDIT_TIMEOUT_LOG:?}"
+    exec "$@"
+fi
+exec /usr/bin/timeout "$duration" "$@"
+SCRIPT
+chmod +x "$work/bin/timeout"
+for audit_timeout in '' 0 -1 invalid 1.5 ' 7 ' 7; do
+	expected_timeout=60
+	[[ $audit_timeout == 7 ]] && expected_timeout=7
+	: >"$work/audit.log"
+	: >"$work/audit-timeout.log"
+	HOME="$work/home" DWM_HEALTH_OS_RELEASE="$work/os-release" \
+		DWM_AUDIT_LOG="$work/audit.log" DWM_AUDIT_TIMEOUT_LOG="$work/audit-timeout.log" \
+		DWM_HEALTH_COMMAND_TIMEOUT=2 DWM_HEALTH_PACKAGE_DB_TIMEOUT="$audit_timeout" PATH="$work/bin:/usr/bin:/bin" \
+		"$HELPER" scan-user >"$work/audit.tsv"
+	[[ $(cat "$work/audit-timeout.log") == "$expected_timeout" ]]
+	[[ $(cat "$work/audit.log") == 'audit ran' ]]
+	grep -Fq $'check\tdependencies\tok\tpackage-database' "$work/audit.tsv"
+done
+
+# A missing timeout utility must skip DNF instead of running it unbounded.
+cat >"$work/no-timeout-env" <<'SCRIPT'
+command() {
+    if [[ $1 == -v && ${2:-} == timeout ]]; then
+        return 1
+    fi
+    builtin command "$@"
+}
+SCRIPT
+: >"$work/audit.log"
+HOME="$work/home" DWM_HEALTH_OS_RELEASE="$work/os-release" \
+	DWM_AUDIT_LOG="$work/audit.log" BASH_ENV="$work/no-timeout-env" \
+	PATH="$work/bin:/usr/bin:/bin" "$HELPER" scan-user >"$work/no-timeout.tsv"
+[[ ! -s $work/audit.log ]]
+grep -Fq $'check\tdependencies\trestricted\tpackage-database\tPackage database\tPackage audit needs attention\ttimeout is unavailable; package database audit skipped' "$work/no-timeout.tsv"
+rm "$work/bin/timeout"
+# efivarfs is fixed-size firmware NVRAM, never a cleanable disk error.
+grep -Fq 'df -P -l -x tmpfs -x devtmpfs -x squashfs -x efivarfs' "$HELPER"
+grep -Fq 'df -Pi -l -x tmpfs -x devtmpfs -x squashfs -x efivarfs' "$HELPER"
+grep -Fq $'check\tstorage\tinfo\tdisk-efivars\tFirmware variables (efivarfs)\t99% used' "$work/user.tsv"
+if grep -Fq $'check\tstorage\terror\tdisk-sys-firmware-efi-efivars' "$work/user.tsv"; then
+	printf 'efivarfs storage was reported as an error\n' >&2
+	exit 1
+fi
+
+# Firmware state stays readable even when unrelated filesystem scans fail.
+HOME="$work/home" XDG_CONFIG_HOME="$work/home/.config" \
+	DWM_HEALTH_OS_RELEASE="$work/os-release" DWM_HEALTH_COMMAND_TIMEOUT=2 \
+	DWM_HEALTH_SYSTEMCTL_LOG="$work/systemctl.log" DWM_TEST_DF_FAIL=1 \
+	PATH="$work/bin:/usr/bin:/bin" "$HELPER" scan-user >"$work/df-failed.tsv"
+grep -Fq $'check\tstorage\tinfo\tdisk-efivars' "$work/df-failed.tsv"
+grep -Fq $'check\tstorage\trestricted\tstorage-usage' "$work/df-failed.tsv"
+
+HOME="$work/home" \
+	DWM_HEALTH_COMMAND_TIMEOUT=2 \
+	DWM_HEALTH_SYSTEMCTL_LOG="$work/systemctl.log" \
+	PATH="$work/bin:/usr/bin:/bin" \
+	"$HELPER" repair-user 'manage-user-service|restart|user-broken.service' >"$work/user-service-repair.tsv"
+grep -Fq -- '--user restart -- user-broken.service' "$work/systemctl.log"
+
+if HOME="$work/home" DWM_HEALTH_COMMAND_TIMEOUT=2 PATH="$work/bin:/usr/bin:/bin" \
+	"$HELPER" repair-user 'manage-user-service|restart|not-failed.service' 2>"$work/not-failed.err"; then
+	printf 'non-failed user service repair unexpectedly succeeded\n' >&2
+	exit 1
+fi
+grep -Fq 'service is no longer failed' "$work/not-failed.err"
+
+cat >"$work/bin/journalctl" <<'SCRIPT'
+#!/bin/sh
+case " $* " in
+*" -k "*)
+	printf 'I/O error on test device\n'
+	;;
+*)
+	printf 'application failed to start\n'
+	printf 'out of memory: killed process 42\n'
+	;;
+esac
+SCRIPT
+
+cat >"$work/bin/systemctl" <<'SCRIPT'
+#!/bin/sh
+case " $* " in
+*" --failed "*) printf 'example.service loaded failed failed Example\n' ;;
+*" cat NetworkManager.service "* | *" cat bluetooth.service "*) exit 0 ;;
+*" is-active "*) printf 'inactive\n'; exit 3 ;;
+*) exit 1 ;;
+esac
+SCRIPT
+
+cat >"$work/bin/timedatectl" <<'SCRIPT'
+#!/bin/sh
+case "$*" in
+*NTPSynchronized*) printf 'no\n' ;;
+*) printf 'yes\n' ;;
+esac
+SCRIPT
+
+cat >"$work/bin/smartctl" <<'SCRIPT'
+#!/bin/sh
+exit 0
+SCRIPT
+
+cat >"$work/bin/sudo" <<'SCRIPT'
+#!/bin/sh
+[ "$*" = "-n -v" ]
+SCRIPT
+chmod +x "$work/bin/journalctl" "$work/bin/systemctl" "$work/bin/timedatectl" "$work/bin/smartctl" "$work/bin/sudo"
+
+DWM_HEALTH_TEST_ROOT=1 \
+	DWM_HEALTH_COMMAND_TIMEOUT=2 \
+	PATH="$work/bin:/usr/bin:/bin" \
+	"$HELPER" scan-system >"$work/system.tsv"
+
+grep -Fq $'check\tboot\twarn\tjournal-errors' "$work/system.tsv"
+grep -Fq $'check\tboot\terror\tcritical-kernel-events' "$work/system.tsv"
+grep -Fq $'check\tservices\terror\tsystem-failed-example-service\texample.service (system)' "$work/system.tsv"
+grep -Fq $'manage-system-service|example.service\tService actions\tsystem' "$work/system.tsv"
+grep -Fq $'check\tservices\twarn\ttime-sync' "$work/system.tsv"
+grep -Fq $'check\tservices\twarn\tnetworkmanager-service' "$work/system.tsv"
+
+DWM_HEALTH_TEST_ROOT=1 \
+	DWM_HEALTH_COMMAND_TIMEOUT=2 \
+	PATH="$work/bin:/usr/bin:/bin" \
+	"$HELPER" scan-privileged >"$work/privileged.tsv"
+grep -Fq $'meta\toverview\tok\tscan-system-complete' "$work/privileged.tsv"
+
+cat >"$work/bin/sudo" <<'SCRIPT'
+#!/bin/sh
+exit 1
+SCRIPT
+cat >"$work/bin/pkexec" <<'SCRIPT'
+#!/bin/sh
+exit 126
+SCRIPT
+chmod +x "$work/bin/sudo" "$work/bin/pkexec"
+
+if DWM_HEALTH_TEST_ROOT=1 PATH="$work/bin:/usr/bin:/bin" \
+	"$HELPER" scan-privileged >"$work/no-helper.tsv"; then
+	printf 'privileged scan without a trusted helper unexpectedly succeeded\n' >&2
+	exit 1
+fi
+grep -Fq $'meta\toverview\trestricted\tscan-system\tPrivileged scan\tNo trusted installed helper' "$work/no-helper.tsv"
+
+if "$HELPER" repair-user 'restart-audio;touch /tmp/not-allowed' 2>"$work/user-repair.err"; then
+	printf 'unknown user repair unexpectedly succeeded\n' >&2
+	exit 1
+fi
+grep -Fq 'unsupported user repair' "$work/user-repair.err"
+
+if "$HELPER" repair-system 'example.service' 2>"$work/system-repair.err"; then
+	printf 'arbitrary system repair unexpectedly succeeded\n' >&2
+	exit 1
+fi
+grep -Fq 'unsupported system repair' "$work/system-repair.err"
+
+grep -Fq "trusted_parent_chain \"\$resolved\" || return 1" "$HELPER"
+grep -Fq "trusted_parent_chain \"\$resolved\" || continue" "$HELPER"
+
+printf 'System health helper: PASS\n'
