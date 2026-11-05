@@ -57,8 +57,6 @@ done
 printf '%s\n' "$open_menu_body" | grep -Fq 'powerMenuModel.close("panel");'
 grep -Fq 'function refreshApplicationIndex()' "$repo/config/quickshell/launcher/LauncherModel.qml"
 grep -Fq 'root.refreshApplicationIndex()' "$repo/config/quickshell/launcher/LauncherModel.qml"
-grep -Fq '{ title="dwm menu", isfloating=1, alwaysontop=1 },' "$repo/docs/OMARCHY-UI-ADAPTATION.md"
-grep -Fq 'menu open|close|toggle|summon' "$repo/CHANGELOG.md"
 grep -Fq 'target: "launcher"' "$shell"
 grep -Eq 'key="r".*call launcher toggle' "$repo/config/hotkeys.toml"
 if grep -Eq 'call menu (open|toggle|summon)' "$repo/config/hotkeys.toml"; then

@@ -191,7 +191,7 @@ checksums="$repo_root/release/dwm-titus-$release_version-SHA256SUMS"
 
 if [[ $release_version != "$current_version" ]]; then
 	err "requested version $release_version does not match committed config.mk VERSION $current_version"
-	err "update config.mk and CHANGELOG.md, commit them, then rerun the release"
+	err "update config.mk, commit it, then rerun the release"
 	exit 1
 fi
 

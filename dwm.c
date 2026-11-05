@@ -208,6 +208,7 @@ static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interac
 static void arrange(Monitor *m);
 static void arrangemon(Monitor *m);
 static void updatealacrittyshapes(Monitor *m);
+static void destroyalacrittyoverlays(Monitor *m);
 static void attach(Client *c);
 static void attachbottom(Client *c);
 static void attachstack(Client *c);
@@ -434,6 +435,15 @@ static Clr **scheme;
 static Display *dpy;
 static Drw *drw;
 static Clr alacrittyborder;
+static Clr alacrittysharedborder;
+
+typedef struct AlacrittyOverlay AlacrittyOverlay;
+struct AlacrittyOverlay {
+    Window win;
+    Monitor *mon;
+    AlacrittyOverlay *next;
+};
+static AlacrittyOverlay *alacrittyoverlays;
 static Monitor *mons, *selmon;
 static OverrideWindow *overridewindows;
 static Window focusedmenu;
@@ -445,7 +455,7 @@ static int clientlistcachevalid;
 static int selectedmonitorcache;
 static int selectedmonitorcachevalid;
 static Atom dwmfullscreenmonitorsatom, dwmtagupdateatom;
-/* XKB keyboard group state published on the root window (see SPEC.md 5.1) */
+/* XKB keyboard group state published on the root window. */
 static Atom kbgroupatom, kbnamesatom, kbsymbolsatom, kbrequestatom, kbutf8atom;
 static int xkbeventbase = -1;  /* -1: no usable XKB extension */
 static long kbpublished[2] = { -1, -1 }; /* group, group count */
@@ -797,56 +807,119 @@ arrange(Monitor *m)
 }
 
 static void
+destroyalacrittyoverlays(Monitor *m)
+{
+    AlacrittyOverlay **link, *overlay;
+
+    for (link = &alacrittyoverlays; *link;) {
+        overlay = *link;
+        if (!m || overlay->mon == m) {
+            XDestroyWindow(dpy, overlay->win);
+            *link = overlay->next;
+            free(overlay);
+        } else {
+            link = &overlay->next;
+        }
+    }
+}
+
+static void
+createalacrittyoverlay(Monitor *m, int x, int y, unsigned int w, unsigned int h)
+{
+    XSetWindowAttributes attr;
+    AlacrittyOverlay *overlay;
+    Window win;
+
+    if (!w || !h)
+        return;
+
+    attr.override_redirect = True;
+    attr.background_pixel = alacrittysharedborder.pixel;
+
+    win = XCreateWindow(dpy, root, x, y, w, h, 0,
+        CopyFromParent, InputOutput, CopyFromParent,
+        CWOverrideRedirect | CWBackPixel, &attr);
+
+    /* Empty input region: the overlay cannot intercept mouse input. */
+    XShapeCombineRectangles(dpy, win, ShapeInput, 0, 0,
+        NULL, 0, ShapeSet, Unsorted);
+
+    overlay = ecalloc(1, sizeof *overlay);
+    overlay->win = win;
+    overlay->mon = m;
+    overlay->next = alacrittyoverlays;
+    alacrittyoverlays = overlay;
+
+    XMapWindow(dpy, win);
+}
+
+static void
+raisealacrittyoverlays(void)
+{
+    AlacrittyOverlay *overlay;
+
+    for (overlay = alacrittyoverlays; overlay; overlay = overlay->next)
+        XRaiseWindow(dpy, overlay->win);
+}
+
+static void
 updatealacrittyshapes(Monitor *m)
 {
-	Client *c, *other;
-	XRectangle rect;
-	int omitright, omitbottom;
+    Client *c, *other;
+    XRectangle rect;
+    int omitright, omitbottom;
 
-	for (c = m->clients; c; c = c->next) {
-		if (!c->isalacritty)
-			continue;
+    destroyalacrittyoverlays(m);
 
-		/* Restore the default shape before calculating shared edges. */
-		XShapeCombineMask(dpy, c->win, ShapeBounding, 0, 0, None, ShapeSet);
+    for (c = m->clients; c; c = c->next) {
+        if (!c->isalacritty)
+            continue;
 
-		if (c->isfullscreen || c->isfloating || !ISVISIBLE(c) || c->bw <= 0)
-			continue;
+        XShapeCombineMask(dpy, c->win, ShapeBounding, 0, 0, None, ShapeSet);
 
-		omitright = omitbottom = 0;
+        if (c->isfullscreen || c->isfloating || !ISVISIBLE(c) || c->bw <= 0)
+            continue;
 
-		for (other = m->clients; other; other = other->next) {
-			if (other == c || !other->isalacritty
-			|| other->isfullscreen || other->isfloating
-			|| !ISVISIBLE(other) || other->bw <= 0)
-				continue;
+        omitright = omitbottom = 0;
 
-			/* The left-hand window gives up its right border. */
-			if (c->x + c->w + c->bw == other->x - other->bw
-			&& c->y - c->bw < other->y + other->h + other->bw
-			&& other->y - other->bw < c->y + c->h + c->bw)
-				omitright = 1;
+        for (other = m->clients; other; other = other->next) {
+            if (other == c || !other->isalacritty
+            || other->isfullscreen || other->isfloating
+            || !ISVISIBLE(other) || other->bw <= 0)
+                continue;
 
-			/* The upper window gives up its bottom border. */
-			if (c->y + c->h + c->bw == other->y - other->bw
-			&& c->x - c->bw < other->x + other->w + other->bw
-			&& other->x - other->bw < c->x + c->w + c->bw)
-				omitbottom = 1;
-		}
+            if (c->x + c->w + c->bw == other->x - other->bw
+            && c->y - c->bw < other->y + other->h + other->bw
+            && other->y - other->bw < c->y + c->h + c->bw)
+                omitright = 1;
 
-		if (!omitright && !omitbottom)
-			continue;
+            if (c->y + c->h + c->bw == other->y - other->bw
+            && c->x - c->bw < other->x + other->w + other->bw
+            && other->x - other->bw < c->x + c->w + c->bw)
+                omitbottom = 1;
+        }
 
-		rect.x = -c->bw;
-		rect.y = -c->bw;
-		rect.width = (unsigned short)(c->w + 2 * c->bw
-			- (omitright ? c->bw : 0));
-		rect.height = (unsigned short)(c->h + 2 * c->bw
-			- (omitbottom ? c->bw : 0));
+        if (!omitright && !omitbottom)
+            continue;
 
-		XShapeCombineRectangles(dpy, c->win, ShapeBounding, 0, 0,
-			&rect, 1, ShapeSet, Unsorted);
-	}
+        rect.x = -c->bw;
+        rect.y = -c->bw;
+        rect.width = (unsigned short)(c->w + 2 * c->bw
+            - (omitright ? c->bw : 0));
+        rect.height = (unsigned short)(c->h + 2 * c->bw
+            - (omitbottom ? c->bw : 0));
+
+        XShapeCombineRectangles(dpy, c->win, ShapeBounding, 0, 0,
+            &rect, 1, ShapeSet, Unsorted);
+
+        if (omitright)
+            createalacrittyoverlay(m, c->x + c->w + c->bw,
+                c->y - c->bw, c->bw, c->h + 2 * c->bw);
+
+        if (omitbottom)
+            createalacrittyoverlay(m, c->x - c->bw,
+                c->y + c->h + c->bw, c->w + 2 * c->bw, c->bw);
+    }
 }
 
 void
@@ -1024,6 +1097,7 @@ cleanupmon(Monitor *mon)
 		for (m = mons; m && m->next != mon; m = m->next);
 		m->next = mon->next;
 	}
+	destroyalacrittyoverlays(mon);
 	/* External dock windows are managed by their own process. */
 	free(mon);
 }
@@ -2922,6 +2996,8 @@ restackprioritywindows(void)
 	OverrideWindow *ow;
 	Window focused;
 
+	raisealacrittyoverlays();
+
 	/* Raise order is the priority contract: always-on-top clients, bars and
 	 * trays, override popups, then real fullscreen clients above all shell
 	 * surfaces, except explicitly rule-authorized unmanaged overlays. */
@@ -4356,6 +4432,7 @@ setup(void)
 	root = RootWindow(dpy, screen);
 	drw = drw_create(dpy, screen, root, sw, sh);
 	drw_clr_create(drw, &alacrittyborder, "#082729");
+	drw_clr_create(drw, &alacrittysharedborder, "#345157");
 	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
 	lrpad = drw->fonts->h;

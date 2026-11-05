@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Do not include passwords, tokens, private keys, or other secrets. Report
-        security issues privately using the instructions in `SECURITY.md`.
+        Do not report security vulnerabilities in public issues.
 
   - type: textarea
     id: issue_description
