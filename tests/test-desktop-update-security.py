@@ -42,7 +42,7 @@ class Security(unittest.TestCase):
         self.binary.chmod(0o755)
         self.manifest_path = self.prefix / "share/dwm-qud/desktop-install.json"
         self.manifest_path.parent.mkdir(parents=True)
-        self.manifest = {"schema": 1, "source": "https://github.com/ChrisTitusTech/dwm-qud.git",
+        self.manifest = {"schema": 1, "source": "https://github.com/lyrashmi/dwm-qud.git",
                          "revision": "a" * 40, "layout": {"prefix": str(self.prefix)}, "packages": ["gcc"],
                          "files": {str(self.binary): {"mode": 0o755, "sha256": hashlib.sha256(b"updated").hexdigest()}}}
         self.manifest_path.write_text(json.dumps(self.manifest, sort_keys=True) + "\n")

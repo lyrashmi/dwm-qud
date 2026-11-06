@@ -143,7 +143,7 @@ update.SOURCE = sys.argv[1]
 official_trust = update.trusted_installation
 def trust(path):
     local_source = update.SOURCE
-    update.SOURCE = "https://github.com/ChrisTitusTech/dwm-qud.git"
+    update.SOURCE = "https://github.com/lyrashmi/dwm-qud.git"
     try: official_trust(path)
     finally: update.SOURCE = local_source
 update.trusted_installation = trust
