@@ -17,7 +17,7 @@ static const int topbar             = 1;        /* 0 means bottom bar */
 /* Fonts: Source Code Pro for interface text; SauceCodePro Nerd Font for terminal and icon glyphs. */
 static const char dmenufont[]       = "Source Code Pro:size=12";
 /* Fonts for the bar */
-static const char *fonts[]          = { "Source Code Pro:size=12:antialias=true:autohint=true", "SauceCodePro Nerd Font:size=12:antialias=true:autohint=true", "NotoColorEmoji:pixelsize=14:antialias=true:autohint=true" };
+static const char *fonts[]          = { "Source Code Pro:size=12:antialias=true:autohint=true", "SauceCodePro Nerd Font Mono:size=12:antialias=true:autohint=true", "NotoColorEmoji:pixelsize=14:antialias=true:autohint=true" };
 
 
 
