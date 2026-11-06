@@ -858,6 +858,21 @@ if install_recommended_profile; then
 fi
 configure_displays_after_install
 
+# ── Fastfetch Configuration ─────────────────────────────
+info "Ensuring fastfetch is installed and configured..."
+if ! command -v fastfetch &>/dev/null; then
+    info "Installing fastfetch via dnf..."
+    sudo dnf install -y fastfetch || warn "Failed to install fastfetch."
+fi
+
+mkdir -p "$HOME/.config/fastfetch"
+if [[ -f "$REPO_DIR/config/fastfetch/config.jsonc" ]]; then
+    install -m 0644 "$REPO_DIR/config/fastfetch/config.jsonc" "$HOME/.config/fastfetch/config.jsonc"
+    ok "Fastfetch configuration installed."
+else
+    warn "Fastfetch configuration not found in repository."
+fi
+
 # ── Done ─────────────────────────────────────────────────
 echo ""
 echo "╔═══════════════════════════════════════════╗"
