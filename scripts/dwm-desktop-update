@@ -23,7 +23,7 @@ import tempfile
 import time
 import uuid
 
-SOURCE = "https://github.com/ChrisTitusTech/dwm-qud.git"
+SOURCE = "https://github.com/lyrashmi/dwm-qud.git"
 UNIT = "dwm-desktop-update.service"
 ACTIVE = {"starting", "downloading", "dependencies", "building", "backing-up", "installing", "verifying", "activating", "recovering"}
 CHECK_SECONDS = 60

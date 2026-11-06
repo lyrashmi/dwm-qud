@@ -77,7 +77,7 @@ dwm_packages() {
 		dwm_packages "$family" keyring
 		;;
 	fedora:desktop-optional)
-		# Path: https://github.com/ChrisTitusTech/Path, packaged in
+		# Path: https://github.com/lyrashmi/Path, packaged in
 		# christitustech/copr-fedora; skip when that repository is unavailable.
 		printf '%s\n' \
 			path Thunar gvfs gvfs-smb tumbler thunar-archive-plugin file-roller \
