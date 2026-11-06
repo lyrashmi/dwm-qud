@@ -84,13 +84,13 @@ ShellRoot {
                     const cachedProviders = model.providers;
                     const cachedTotalUpdates = model.totalUpdates;
                     model.savedAlwaysShow = false;
-                    test.require(model.acceptSnapshot("update-center-protocol\t1\t0\nprovider\tdwm-titus\tDWM-Titus\tavailable\t0\t1\tfresh\t10\tno\t\tReady\ncomplete\tsnapshot\n")
+                    test.require(model.acceptSnapshot("update-center-protocol\t1\t0\nprovider\tdwm-qud\tDWM-Qud\tavailable\t0\t1\tfresh\t10\tno\t\tReady\ncomplete\tsnapshot\n")
                             && !model.shouldShow(), "healthy current state must honor alwaysShow=false");
-                    test.require(model.acceptSnapshot("update-center-protocol\t1\t0\nprovider\tdwm-titus\tDWM-Titus\tavailable\t0\t1\tstale\t10\tno\tnetwork\tCached\ncomplete\tsnapshot\n")
+                    test.require(model.acceptSnapshot("update-center-protocol\t1\t0\nprovider\tdwm-qud\tDWM-Qud\tavailable\t0\t1\tstale\t10\tno\tnetwork\tCached\ncomplete\tsnapshot\n")
                             && model.shouldShow(), "stale state must force panel visibility");
-                    test.require(model.acceptSnapshot("update-center-protocol\t1\t0\nprovider\tdwm-titus\tDWM-Titus\tavailable\t0\t1\tfresh\t10\tno\t\tRestart ready\nguidance\tdwm-titus\trestart\tsession\ncomplete\tsnapshot\n")
+                    test.require(model.acceptSnapshot("update-center-protocol\t1\t0\nprovider\tdwm-qud\tDWM-Qud\tavailable\t0\t1\tfresh\t10\tno\t\tRestart ready\nguidance\tdwm-qud\trestart\tsession\ncomplete\tsnapshot\n")
                             && model.shouldShow(), "restart guidance must force panel visibility");
-                    model.activeOperation = { operationId: "op-00000000000000000000000000000000", providerId: "dwm-titus",
+                    model.activeOperation = { operationId: "op-00000000000000000000000000000000", providerId: "dwm-qud",
                         action: "update", phase: "running", outcome: "pending" };
                     test.require(model.shouldShow(), "active state must force panel visibility");
                     model.activeOperation.phase = "interrupted";
@@ -205,7 +205,7 @@ ShellRoot {
                     test.require(model.launch("fedora"), "normal provider launch must dispatch");
                     test.step = 7;
                 } else if (test.step === 7 && !model.busy && model.providers[0].detail === "force-6") {
-                    test.require(model.launch("dwm-titus"), "failed terminal fixture must dispatch");
+                    test.require(model.launch("dwm-qud"), "failed terminal fixture must dispatch");
                     test.step = 8;
                 } else if (test.step === 8 && !model.busy && model.providers[0].detail === "force-7") {
                     test.require(model.launch("flatpak"), "ambiguous launch fixture must dispatch");

@@ -21,14 +21,14 @@ def checked_path(root, relative):
 def manage(action, destdir, source):
     """Create absent defaults or remove only an unchanged recorded installation."""
     root = Path(os.path.abspath(destdir or "/"))
-    target = root / "usr/share/dnf5/libdnf.conf.d/40-dwm-titus.conf"
+    target = root / "usr/share/dnf5/libdnf.conf.d/40-dwm-qud.conf"
     # An existing file (including a symlink) belongs to its administrator until
     # a prior installation record proves otherwise. Never adopt it on install.
     if action == "install" and os.path.lexists(target):
         print(f"Preserving existing {target}")
         return
-    state = checked_path(root, "var/lib/dwm-titus/dnf-defaults")
-    record = checked_path(root, "var/lib/dwm-titus/dnf-defaults/sha256")
+    state = checked_path(root, "var/lib/dwm-qud/dnf-defaults")
+    record = checked_path(root, "var/lib/dwm-qud/dnf-defaults/sha256")
     if action == "uninstall" and not record.exists():
         return
     state.mkdir(parents=True, exist_ok=True, mode=0o755)
@@ -38,7 +38,7 @@ def manage(action, destdir, source):
         if action == "install":
             if os.path.lexists(target):
                 return
-            checked_path(root, "usr/share/dnf5/libdnf.conf.d/40-dwm-titus.conf")
+            checked_path(root, "usr/share/dnf5/libdnf.conf.d/40-dwm-qud.conf")
             target.parent.mkdir(parents=True, exist_ok=True)
             payload = Path(source).read_bytes()
             staged = []
@@ -78,7 +78,7 @@ def manage(action, destdir, source):
         if target.is_symlink():
             print(f"Preserving administrator replacement: {target}")
         elif target.is_file():
-            checked_path(root, "usr/share/dnf5/libdnf.conf.d/40-dwm-titus.conf")
+            checked_path(root, "usr/share/dnf5/libdnf.conf.d/40-dwm-qud.conf")
             digest = hashlib.sha256(target.read_bytes()).hexdigest()
             if digest == record.read_text().strip():
                 target.unlink()
@@ -96,10 +96,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("install", "uninstall"))
     parser.add_argument("--destdir", default="")
-    parser.add_argument("--source", default="config/dnf/40-dwm-titus.conf")
+    parser.add_argument("--source", default="config/dnf/40-dwm-qud.conf")
     args = parser.parse_args()
     if os.geteuid() == 0:
-        installed = Path(os.path.abspath(args.destdir or "/")) / "@PREFIX@/libexec/dwm-titus/dwm-dnf-defaults".lstrip("/")
+        installed = Path(os.path.abspath(args.destdir or "/")) / "@PREFIX@/libexec/dwm-qud/dwm-dnf-defaults".lstrip("/")
         executable = Path(__file__).absolute()
         if executable != installed or executable.is_symlink():
             raise RuntimeError("Run the installed DNF defaults helper")

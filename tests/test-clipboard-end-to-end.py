@@ -84,7 +84,7 @@ ShellRoot {
                 except (AssertionError, json.JSONDecodeError): pass
                 time.sleep(.05)
             raise AssertionError(last)
-        history = home / '.cache/dwm-titus/clipboard-history-v2.json'
+        history = home / '.cache/dwm-qud/clipboard-history-v2.json'
         def stored():
             return json.loads(history.read_text())['entries']
         def copy(application, mode, text):

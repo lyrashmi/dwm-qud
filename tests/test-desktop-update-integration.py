@@ -48,7 +48,7 @@ with tempfile.TemporaryDirectory(prefix="desktop-integration-", dir="/opt") as t
     user("git", "add", ".")
     user("git", "commit", "-m", "Baseline desktop")
     user("make", "clean", "all")
-    journal = Path("/var/lib/dwm-titus/desktop-updates") / ("e" * 32) / "journal.json"
+    journal = Path("/var/lib/dwm-qud/desktop-updates") / ("e" * 32) / "journal.json"
     previous_umask = os.umask(0o022)
     journal.parent.mkdir(parents=True, mode=0o700)
     os.umask(previous_umask)
@@ -77,9 +77,9 @@ with tempfile.TemporaryDirectory(prefix="desktop-integration-", dir="/opt") as t
                     "USER_HOME=/home/desktop-test", "XDG_STATE_HOME=" + env["XDG_STATE_HOME"]],
                    cwd=source, check=True)
     config = Path("/home/desktop-test/.config")
-    data = Path("/home/desktop-test/.local/share/dwm-titus")
-    state = Path(env["XDG_STATE_HOME"]) / "dwm-titus/desktop-update"
-    (config / "dwm-titus/themes.toml").write_text("personal-theme-marker")
+    data = Path("/home/desktop-test/.local/share/dwm-qud")
+    state = Path(env["XDG_STATE_HOME"]) / "dwm-qud/desktop-update"
+    (config / "dwm-qud/themes.toml").write_text("personal-theme-marker")
     subprocess.run(["chown", "-R", "desktop-test:desktop-test", "/home/desktop-test"], check=True)
     # An unprivileged check must reject readable but root-owned managed roots
     # before package, network, or privileged transaction work can begin.
@@ -99,7 +99,7 @@ with tempfile.TemporaryDirectory(prefix="desktop-integration-", dir="/opt") as t
     user("python3", source / "scripts/dwm-desktop-update", "record-user", source)
     # A real new commit changes managed QML, the session binary, commands, and
     # the privileged helper itself, adds a palette, and retires a managed asset.
-    before_manifest = json.loads((prefix / "share/dwm-titus/desktop-install.json").read_text())
+    before_manifest = json.loads((prefix / "share/dwm-qud/desktop-install.json").read_text())
     changed_commands = ("dwm-settings-wallpaper", "dwm-xsettings", "dwm-desktop-update")
     for name in (*changed_commands, "dwm-desktop-update-root"):
         path = source / "scripts" / name
@@ -122,7 +122,7 @@ with tempfile.TemporaryDirectory(prefix="desktop-integration-", dir="/opt") as t
     user("git", "commit", "-m", "Update managed shell and system executables")
     revision = subprocess.check_output(["git", "-c", "safe.directory=" + str(source), "-C", source, "rev-parse", "HEAD"], text=True).strip()
     rule = Path("/etc/polkit-1/rules.d/00-desktop-update-test.rules")
-    helper = str(prefix / "libexec/dwm-titus/dwm-desktop-update-root")
+    helper = str(prefix / "libexec/dwm-qud/dwm-desktop-update-root")
     rule.write_text('polkit.addRule(function(action, subject) { if (action.id === "org.freedesktop.policykit.exec" '
                     '&& action.lookup("program") === ' + json.dumps(helper) + ' && subject.user === "desktop-test") '
                     'return polkit.Result.YES; });\n')
@@ -143,7 +143,7 @@ update.SOURCE = sys.argv[1]
 official_trust = update.trusted_installation
 def trust(path):
     local_source = update.SOURCE
-    update.SOURCE = "https://github.com/ChrisTitusTech/dwm-titus.git"
+    update.SOURCE = "https://github.com/ChrisTitusTech/dwm-qud.git"
     try: official_trust(path)
     finally: update.SOURCE = local_source
 update.trusted_installation = trust
@@ -158,7 +158,7 @@ state = update.paths()[2]
 operation = "d" * 32
 directory = state / "operations" / operation
 directory.mkdir(parents=True)
-manifest = Path(sys.argv[2]) / "share/dwm-titus/desktop-install.json"
+manifest = Path(sys.argv[2]) / "share/dwm-qud/desktop-install.json"
 preview = dict(update.status_default(), available=sys.argv[3], generation=update.digest(manifest), manifest=str(manifest))
 update.write_json(directory / "preview.json", preview)
 update.write_json(state / "status.json", dict(preview, operation=operation, state="starting"))
@@ -175,7 +175,7 @@ sys.exit(result)
             raise
         status = json.loads((state / "status.json").read_text())
         assert status["state"] == "restart-required", status
-        after_manifest = json.loads((prefix / "share/dwm-titus/desktop-install.json").read_text())
+        after_manifest = json.loads((prefix / "share/dwm-qud/desktop-install.json").read_text())
         assert after_manifest["revision"] == revision
         assert str(prefix / "share/themes/Dwm-Integration/gtk-3.0/gtk.css") in after_manifest["files"]
         assert (prefix / "share/themes/Dwm-Integration/gtk-3.0/gtk.css").is_file()
@@ -188,7 +188,7 @@ sys.exit(result)
             assert record["sha256"] == hashlib.sha256(path.read_bytes()).hexdigest(), path
             assert path.stat().st_uid == 0 and path.stat().st_mode & 0o7777 == 0o755, path
         assert (config / "quickshell/update-integration-marker").read_text() == "updated desktop\n"
-        assert (config / "dwm-titus/themes.toml").read_text() == "personal-theme-marker"
+        assert (config / "dwm-qud/themes.toml").read_text() == "personal-theme-marker"
         assert (config / "quickshell" / file_link.name).read_text() == marker.read_text()
         assert not (config / "quickshell" / file_link.name).is_symlink()
         assert (config / "quickshell" / directory_link.name / "DesktopUpdateModel.qml").is_file()
@@ -196,7 +196,7 @@ sys.exit(result)
         assert (prefix / "bin/dwm").stat().st_uid == 0
         assert (prefix / "share/icons/Capitaine-Cursors-White/cursors").stat().st_uid == 0
         user("python3", prefix / "bin/dwm-desktop-update", "verify-receipts", source,
-             prefix / "share/dwm-titus/desktop-install.json")
+             prefix / "share/dwm-qud/desktop-install.json")
         print("Real Fedora build / user worker / polkit installation: PASS", flush=True)
     finally:
         polkit.terminate()

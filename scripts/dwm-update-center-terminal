@@ -69,7 +69,7 @@ def set_terminal_identity(environment=None, output=None):
 PROVIDER_TITLES = {
     "fedora": ("Update system packages", "Recover system packages"),
     "flatpak": ("Update Flatpak packages", "Recover Flatpak packages"),
-    "dwm-titus": ("Update DWM-Titus", "Recover DWM-Titus"),
+    "dwm-qud": ("Update DWM-Qud", "Recover DWM-Qud"),
     "mise": ("Update mise tools", "Recover mise tools"),
 }
 
@@ -696,7 +696,7 @@ def execute_provider(operation, provider, action):
     # Repeating discovery here hides a full scan before the first progress line.
     if provider != "fedora":
         validate_provider_action(provider, action)
-    return {"fedora": execute_fedora, "dwm-titus": execute_desktop,
+    return {"fedora": execute_fedora, "dwm-qud": execute_desktop,
             "flatpak": execute_flatpak, "mise": execute_mise}[provider](operation, action)
 
 

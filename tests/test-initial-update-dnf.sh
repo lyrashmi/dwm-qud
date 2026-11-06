@@ -45,7 +45,7 @@ enabled=1
 pkg_gpgcheck=1
 gpgkey=file://$work/key.asc
 EOF
-install -Dm644 "$repo/config/dnf/40-dwm-titus.conf" /usr/share/dnf5/libdnf.conf.d/40-dwm-titus.conf
+install -Dm644 "$repo/config/dnf/40-dwm-qud.conf" /usr/share/dnf5/libdnf.conf.d/40-dwm-qud.conf
 for command in update upgrade; do
 	rpm -U --oldpackage --replacepkgs "$work/rpmbuild/RPMS/noarch/dwm-dnf-test-fixture-1-1.noarch.rpm"
 	set +e
@@ -78,11 +78,11 @@ import subprocess
 import sys
 
 source, repos = map(Path, sys.argv[1:])
-helper = Path('/usr/local/libexec/dwm-titus/dwm-initial-update-root')
+helper = Path('/usr/local/libexec/dwm-qud/dwm-initial-update-root')
 helper.parent.mkdir(parents=True, exist_ok=True)
 helper.write_text((source / 'scripts/dwm-initial-update-root').read_text().replace('@PREFIX@', '/usr/local'))
 helper.chmod(0o755)
-state = Path('/var/lib/dwm-titus/initial-update')
+state = Path('/var/lib/dwm-qud/initial-update')
 state.mkdir(parents=True, exist_ok=True)
 (state / 'pending.json').write_text('{}\n')
 complete = state / 'complete.json'

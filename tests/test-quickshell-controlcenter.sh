@@ -15,13 +15,13 @@ test_uid=$(id -u)
 mkdir -p "$work/fixture/scripts"
 cp "$repo/scripts/dwm-quickshell-controlcenter" "$work/fixture/scripts/"
 
-mkdir -p "$work/bin" "$work/config/dwm-titus" "$work/home/Pictures/backgrounds" \
-	"$work/data/dwm-titus/config/quickshell" "$work/state" "$work/runtime" "$work/power-state"
+mkdir -p "$work/bin" "$work/config/dwm-qud" "$work/home/Pictures/backgrounds" \
+	"$work/data/dwm-qud/config/quickshell" "$work/state" "$work/runtime" "$work/power-state"
 mkdir -p "$work/config/quickshell"
-cp "$repo/config/themes.toml" "$work/config/dwm-titus/themes.toml"
-cp "$repo/config/themes.toml" "$work/data/dwm-titus/config/themes.toml"
-cp "$repo/config/hotkeys.toml" "$work/config/dwm-titus/hotkeys.toml"
-: >"$work/data/dwm-titus/config/quickshell/shell.qml"
+cp "$repo/config/themes.toml" "$work/config/dwm-qud/themes.toml"
+cp "$repo/config/themes.toml" "$work/data/dwm-qud/config/themes.toml"
+cp "$repo/config/hotkeys.toml" "$work/config/dwm-qud/hotkeys.toml"
+: >"$work/data/dwm-qud/config/quickshell/shell.qml"
 : >"$work/config/quickshell/shell.qml"
 : >"$work/home/Pictures/backgrounds/cavebg.jpg"
 
@@ -274,9 +274,9 @@ fc43_health=$(DWM_TEST_QUICKSHELL_VERSION=0.2.1^git20260209.dacfa9d-3.fc43 run_h
 printf '%s\n' "$fc43_health" | grep -Fqx 'error	Quickshell	Outdated'
 
 sed -i 's/^\[active\]$/  [active] # retained header comment/' \
-	"$work/config/dwm-titus/themes.toml"
+	"$work/config/dwm-qud/themes.toml"
 sed -i 's/^\[theme.dracula\]$/  [theme.dracula] # retained theme comment/' \
-	"$work/config/dwm-titus/themes.toml"
+	"$work/config/dwm-qud/themes.toml"
 
 info=$(run_helper info)
 printf '%s\n' "$info" | grep -Fqx 'Theme	nord'
@@ -288,7 +288,7 @@ printf '%s\n' "$themes" | grep -Fqx 'available	dracula'
 
 run_helper theme-set dracula >"$work/theme-set.out"
 grep -Fqx 'theme	dracula' "$work/theme-set.out"
-grep -Fq 'theme = "dracula"' "$work/config/dwm-titus/themes.toml"
+grep -Fq 'theme = "dracula"' "$work/config/dwm-qud/themes.toml"
 
 if run_helper theme-set missing-theme 2>"$work/theme-set.err"; then
 	exit 1
@@ -299,15 +299,15 @@ grep -Fq 'theme is unavailable, invalid, or the source is unsafe to mutate: miss
 mkdir -p "$work/prefix/bin"
 cp "$repo/scripts/dwm-quickshell-controlcenter" "$repo/scripts/dwm-session-launch" \
 	"$work/prefix/bin/"
-rm "$work/config/dwm-titus/themes.toml"
+rm "$work/config/dwm-qud/themes.toml"
 installed_themes=$(HOME="$work/home" XDG_CONFIG_HOME="$work/config" \
 	XDG_DATA_HOME="$work/data" "$work/prefix/bin/dwm-quickshell-controlcenter" themes)
 printf '%s\n' "$installed_themes" | grep -Fqx 'active	nord'
 printf '%s\n' "$installed_themes" | grep -Fqx 'available	dracula'
-cp "$work/data/dwm-titus/config/themes.toml" "$work/config/dwm-titus/themes.toml"
+cp "$work/data/dwm-qud/config/themes.toml" "$work/config/dwm-qud/themes.toml"
 printf '%s\n' 'export QT_QPA_PLATFORMTHEME=qt6ct' \
 	'export XCURSOR_THEME=Custom-Cursor' 'export XCURSOR_SIZE=32' \
-	>"$work/config/dwm-titus/theme-env.sh"
+	>"$work/config/dwm-qud/theme-env.sh"
 DWM_TEST_LOG="$work/actions.log" DWM_TEST_SYNC=1 \
 	DWM_TEST_THEME_ENV_LOG="$work/custom-prefix-theme-env.log" \
 	HOME="$work/home" XDG_CONFIG_HOME="$work/config" XDG_RUNTIME_DIR="$work/runtime" \
@@ -317,10 +317,10 @@ DWM_TEST_LOG="$work/actions.log" DWM_TEST_SYNC=1 \
 grep -Fqx "$(printf 'qt6ct\tCustom-Cursor\t32')" \
 	"$work/custom-prefix-theme-env.log"
 
-rm "$work/config/dwm-titus/themes.toml" "$work/data/dwm-titus/config/themes.toml"
+rm "$work/config/dwm-qud/themes.toml" "$work/data/dwm-qud/config/themes.toml"
 run_helper theme-set dracula >"$work/theme-set-source.out"
 grep -Fqx 'theme	dracula' "$work/theme-set-source.out"
-grep -Fq 'theme = "dracula"' "$work/config/dwm-titus/themes.toml"
+grep -Fq 'theme = "dracula"' "$work/config/dwm-qud/themes.toml"
 
 keybinds=$(run_helper keybinds)
 printf '%s\n' "$keybinds" | grep -Fqx 'Super + r	App launcher'
@@ -354,8 +354,8 @@ rm -f "$work/power-state/light-locker.running"
 : >"$work/actions.log"
 run_helper power-dpms-timeout 900 >"$work/power-dpms-timeout.out"
 grep -Fqx 'power-dpms-timeout	900' "$work/power-dpms-timeout.out"
-grep -Fq 'dpms_enabled=1' "$work/config/dwm-titus/power.conf"
-grep -Fq 'dpms_timeout=900' "$work/config/dwm-titus/power.conf"
+grep -Fq 'dpms_enabled=1' "$work/config/dwm-qud/power.conf"
+grep -Fq 'dpms_timeout=900' "$work/config/dwm-qud/power.conf"
 grep -Fqx 'xset +dpms' "$work/actions.log"
 grep -Fqx 'xset dpms 900 900 900' "$work/actions.log"
 power=$(run_helper power-status)
@@ -365,8 +365,8 @@ printf '%s\n' "$power" | grep -Fqx 'dpms_timeout	900'
 : >"$work/actions.log"
 run_helper power-lock-timeout 300 >"$work/power-lock-timeout.out"
 grep -Fqx 'power-lock-timeout	300' "$work/power-lock-timeout.out"
-grep -Fq 'lock_enabled=1' "$work/config/dwm-titus/power.conf"
-grep -Fq 'lock_timeout=300' "$work/config/dwm-titus/power.conf"
+grep -Fq 'lock_enabled=1' "$work/config/dwm-qud/power.conf"
+grep -Fq 'lock_timeout=300' "$work/config/dwm-qud/power.conf"
 grep -Fqx 'xset s 300' "$work/actions.log"
 grep -Fqx 'gsettings set apps.light-locker lock-after-screensaver 5' "$work/actions.log"
 grep -Fqx 'gsettings set apps.light-locker lock-on-suspend true' "$work/actions.log"
@@ -379,7 +379,7 @@ printf '%s\n' "$power" | grep -Fqx 'lock_running	1'
 : >"$work/actions.log"
 run_helper power-lock off >"$work/power-lock-off.out"
 grep -Fqx 'power-lock	0' "$work/power-lock-off.out"
-grep -Fq 'lock_enabled=0' "$work/config/dwm-titus/power.conf"
+grep -Fq 'lock_enabled=0' "$work/config/dwm-qud/power.conf"
 grep -Fqx 'xset s off' "$work/actions.log"
 grep -Fqx 'xset s noblank' "$work/actions.log"
 grep -Fqx 'gsettings set apps.light-locker lock-after-screensaver 0' "$work/actions.log"
@@ -490,7 +490,7 @@ shift
 exec "$@"
 SH
 chmod +x "$work/bin/dwm-terminal"
-printf '%s\n' "$self_heal_script" >"$work/config/dwm-titus/self-heal.path"
+printf '%s\n' "$self_heal_script" >"$work/config/dwm-qud/self-heal.path"
 printf '\n' | run_helper action self-heal >"$work/self-heal.out"
 grep -Fqx 'self-heal invoked' "$work/self-heal.out"
 grep -Fq 'Self-Heal exited with status 0.' "$work/self-heal.out"
@@ -508,7 +508,7 @@ if DWM_TEST_TERMINAL_STATUS=127 run_helper action self-heal \
 fi
 [ ! -s "$work/self-heal-no-terminal.out" ]
 grep -Fq 'Self-Heal requires an available terminal' "$work/self-heal-no-terminal.err"
-rm "$work/config/dwm-titus/self-heal.path"
+rm "$work/config/dwm-qud/self-heal.path"
 mv "$work/bin/dwm-terminal.saved" "$work/bin/dwm-terminal"
 unset DWM_TEST_CONTROL_HELPER
 

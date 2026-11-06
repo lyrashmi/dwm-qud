@@ -352,7 +352,7 @@ persisted_name_valid() {
 }
 
 load_persisted_preferences() {
-	local file=$config_home/dwm-titus/personalization.conf line capability value first=true
+	local file=$config_home/dwm-qud/personalization.conf line capability value first=true
 	local -A seen=()
 	preference_values=(
 		[font]=follow-system
@@ -385,7 +385,7 @@ load_persisted_preferences() {
 }
 
 persisted_protocol_unsupported() {
-	local file=$config_home/dwm-titus/personalization.conf first
+	local file=$config_home/dwm-qud/personalization.conf first
 	[[ -f $file && ! -L $file && -r $file &&
 		$(stat -c %u -- "$file") == "$UID" &&
 		$(stat -c %h -- "$file") == 1 &&
@@ -414,7 +414,7 @@ decode_theme_environment_value() {
 }
 
 parse_theme_environment() {
-	local file=$config_home/dwm-titus/theme-env.sh line value
+	local file=$config_home/dwm-qud/theme-env.sh line value
 	local seen_qt=false seen_cursor=false seen_size=false
 	[[ -r $file && -f $file && ! -L $file &&
 		$(stat -c %u -- "$file") == "$UID" &&
@@ -524,7 +524,7 @@ status() {
 		preferences_valid=false
 		state=partial
 		if persisted_protocol_unsupported; then
-			detail='Persisted personalization protocol is unsupported; use a compatible dwm-titus version'
+			detail='Persisted personalization protocol is unsupported; use a compatible dwm-qud version'
 			repair_detail='Unsupported personalization state was preserved'
 		else
 			detail='Persisted personalization choices are unavailable or malformed'

@@ -47,7 +47,7 @@ reject_nested_mounts() {
 # Reject every descendant mount, even ignored scratch; nonrecursive binds
 # prevent any later child mount from becoming a writable path in the container.
 reject_nested_mounts
-image=localhost/dwm-titus-tests:fedora-44
+image=localhost/dwm-qud-tests:fedora-44
 printf '==> Building Fedora 44 test image\n'
 set +e
 tar -C "$source_tree" -cf - scripts/dwm-packages.sh tests/containers/fedora-44/Containerfile |

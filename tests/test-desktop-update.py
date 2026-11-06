@@ -93,11 +93,11 @@ class DesktopUpdate(unittest.TestCase):
                 patch.object(update, "trusted_file") as trust, \
                 patch.object(update.subprocess, "run", return_value=SimpleNamespace(returncode=0)) as probe:
             update.install_dependencies()
-        trust.assert_called_once_with(self.base / "libexec/dwm-titus/dwm-desktop-update-root", executable=True)
+        trust.assert_called_once_with(self.base / "libexec/dwm-qud/dwm-desktop-update-root", executable=True)
         self.assertEqual(probe.call_args_list, [
             unittest.mock.call(["/usr/bin/sudo", "-n", "true"], capture_output=True, timeout=10),
             unittest.mock.call(["dwm-terminal", "--print-command"], capture_output=True, timeout=10)])
-        self.command.assert_called_once_with(["/usr/bin/sudo", "-n", self.base / "libexec/dwm-titus/dwm-desktop-update-root",
+        self.command.assert_called_once_with(["/usr/bin/sudo", "-n", self.base / "libexec/dwm-qud/dwm-desktop-update-root",
                                              "repair-dependencies", update.digest(self.manifest_path), "keep-terminal"],
                                             timeout=None, capture=False)
         self.assertEqual({p: p.read_bytes() for p in before}, before)
@@ -123,7 +123,7 @@ class DesktopUpdate(unittest.TestCase):
                         patch.object(update, "trusted_file"), patch.object(update.subprocess, "run", **options), \
                         self.assertRaisesRegex(update.CommandFailure, "denied"):
                     update.install_dependencies()
-                self.command.assert_called_once_with(["/usr/bin/pkexec", self.base / "libexec/dwm-titus/dwm-desktop-update-root",
+                self.command.assert_called_once_with(["/usr/bin/pkexec", self.base / "libexec/dwm-qud/dwm-desktop-update-root",
                                                      "repair-dependencies", update.digest(self.manifest_path)],
                                                     timeout=None, capture=False)
 
@@ -210,7 +210,7 @@ class DesktopUpdate(unittest.TestCase):
                        "xsessions": str(self.base / "xsessions"), "datadir": str(self.base / "share")},
             "files": {str(mapping): update.fingerprint(mapping)}
         }
-        manifest_path = self.base / "share/dwm-titus/desktop-install.json"
+        manifest_path = self.base / "share/dwm-qud/desktop-install.json"
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
         update.write_json(manifest_path, manifest)
         generation = update.digest(manifest_path)
@@ -498,7 +498,7 @@ class DesktopUpdate(unittest.TestCase):
 
     def test_data_directory_reads_custom_installed_receipt(self):
         prefix = self.base / 'custom-prefix'
-        manifest = prefix / 'share/dwm-titus/desktop-install.json'
+        manifest = prefix / 'share/dwm-qud/desktop-install.json'
         manifest.parent.mkdir(parents=True)
         manifest.write_text(json.dumps({'layout': {'datadir': '/opt/custom/palettes'}}))
         output = io.StringIO()
@@ -530,7 +530,7 @@ class DesktopUpdate(unittest.TestCase):
                                commands=[], helpers=[], packages=[])
         with patch.object(update, 'fingerprint', return_value={'mode': 0o644, 'sha256': 'a' * 64}):
             update.record_system(args)
-        manifest = json.loads((stage / 'usr/share/dwm-titus/desktop-install.json').read_text())
+        manifest = json.loads((stage / 'usr/share/dwm-qud/desktop-install.json').read_text())
         self.assertIn('/usr/share/themes/Dwm-dracula/gtk-3.0/gtk.css', manifest['files'])
         self.assertFalse(any('Personal' in path for path in manifest['files']))
 
@@ -545,7 +545,7 @@ class DesktopUpdate(unittest.TestCase):
                 update.record_system(args)
         finally:
             os.umask(previous)
-        self.assertEqual((stage / "usr/share/dwm-titus").stat().st_mode & 0o777, 0o755)
+        self.assertEqual((stage / "usr/share/dwm-qud").stat().st_mode & 0o777, 0o755)
 
     def test_source_reinstall_keeps_previously_managed_omitted_commands(self):
         for destdir in ("", "/"):
@@ -558,7 +558,7 @@ class DesktopUpdate(unittest.TestCase):
                 args = SimpleNamespace(source_dir=str(self.base), destdir=destdir, prefix=str(self.base),
                                        manprefix=str(self.base / "share/man"), xsessions=str(self.base / "xsessions"),
                                        datadir=str(self.base / "share"), commands=[], helpers=[], packages=[])
-                target = self.base / "share/dwm-titus/desktop-install.json"
+                target = self.base / "share/dwm-qud/desktop-install.json"
                 previous = {**self.manifest, "files": {str(legacy): record}}
                 update.write_json(target, previous)
                 with patch.object(update, "trusted_installation") as trusted, \
@@ -573,7 +573,7 @@ class DesktopUpdate(unittest.TestCase):
         legacy.write_text("previously installed helper")
         legacy.chmod(0o755)
         record = update.fingerprint(legacy)
-        target = self.base / "share/dwm-titus/desktop-install.json"
+        target = self.base / "share/dwm-qud/desktop-install.json"
         update.write_json(target, {**self.manifest, "files": {str(legacy): record}})
         legacy.write_text("locally modified helper")
         args = SimpleNamespace(source_dir=str(self.base), destdir="", prefix=str(self.base),
@@ -586,7 +586,7 @@ class DesktopUpdate(unittest.TestCase):
 
     def test_staged_manifest_does_not_import_previous_installation_ownership(self):
         stage = self.base / "stage"
-        target = stage / "usr/share/dwm-titus/desktop-install.json"
+        target = stage / "usr/share/dwm-qud/desktop-install.json"
         legacy = stage / "usr/bin/dwm-legacy"
         legacy.parent.mkdir(parents=True)
         legacy.write_text("stale staged helper")
@@ -601,7 +601,7 @@ class DesktopUpdate(unittest.TestCase):
         trusted.assert_not_called()
 
     def test_source_reinstall_rejects_untrusted_previous_manifest_before_publication(self):
-        target = self.base / "share/dwm-titus/desktop-install.json"
+        target = self.base / "share/dwm-qud/desktop-install.json"
         update.write_json(target, self.manifest)
         before = target.read_bytes()
         args = SimpleNamespace(source_dir=str(self.base), destdir="", prefix=str(self.base),
@@ -615,7 +615,7 @@ class DesktopUpdate(unittest.TestCase):
         self.assertEqual(target.read_bytes(), before)
 
     def test_unprivileged_custom_prefix_reinstall_is_idempotent(self):
-        target = self.base / "share/dwm-titus/desktop-install.json"
+        target = self.base / "share/dwm-qud/desktop-install.json"
         target.parent.mkdir(parents=True)
         update.write_json(target, {**self.manifest, "files": {}})
         args = SimpleNamespace(source_dir=str(self.base), destdir="", prefix=str(self.base),
@@ -937,7 +937,7 @@ class DesktopUpdate(unittest.TestCase):
         (source / "config/quickshell/file").write_text("updated")
         (source / "scripts").mkdir()
         (source / "scripts/helper").write_text("helper")
-        personal = self.config / "dwm-titus/themes.toml"
+        personal = self.config / "dwm-qud/themes.toml"
         personal.parent.mkdir()
         personal.write_text("personal settings")
         entries = update.prepare_user(source, "d" * 32)
@@ -956,7 +956,7 @@ class DesktopUpdate(unittest.TestCase):
         (source / "scripts").mkdir()
         helper = source / "scripts/dwm-migrate-update-center-window-rule"
         shutil.copy2(REPO / "scripts" / helper.name, helper)
-        rules = self.config / "dwm-titus/window-rules.toml"
+        rules = self.config / "dwm-qud/window-rules.toml"
         rules.parent.mkdir()
         original = '# personal rules\nrules = [{ class="MyApp", isfloating=1 }]\n'
         rules.write_text(original)
@@ -1000,7 +1000,7 @@ class DesktopUpdate(unittest.TestCase):
         (source / "scripts").mkdir()
         helper = source / "scripts/dwm-migrate-update-center-window-rule"
         shutil.copy2(REPO / "scripts" / helper.name, helper)
-        rules = self.config / "dwm-titus/window-rules.toml"
+        rules = self.config / "dwm-qud/window-rules.toml"
         rules.parent.mkdir()
         destination = self.base / "personal-rules.toml"
         destination.write_text("rules = []\n")
@@ -1232,7 +1232,7 @@ original_write = update.write_json
 def prepare_migration(source, operation):
     helper = source / "scripts/dwm-migrate-update-center-window-rule"
     shutil.copy2(repo / "scripts" / helper.name, helper)
-    rules = config / "dwm-titus/window-rules.toml"
+    rules = config / "dwm-qud/window-rules.toml"
     rules.write_text('rules = [{class="Personal", isfloating=1}]\\n')
     original_sandbox = update.sandbox_run
     def migrate(args, **kwargs):
@@ -1264,9 +1264,9 @@ sys.exit(update.worker(operation))
         self.assertEqual(len(entries), 3)
         for entry in entries:
             self.assertFalse(Path(entry["staging"]).exists(), entry["staging"])
-        self.assertEqual((directory / "config/dwm-titus/window-rules.toml").read_text(),
+        self.assertEqual((directory / "config/dwm-qud/window-rules.toml").read_text(),
                          'rules = [{class="Personal", isfloating=1}]\n')
-        self.assertEqual((directory / "config/dwm-titus/themes.toml").read_text(), "personal theme")
+        self.assertEqual((directory / "config/dwm-qud/themes.toml").read_text(), "personal theme")
         self.assertEqual((directory / "prefix/bin/dwm").read_text(), "old binary")
 
     def test_cleanup_attempts_remaining_roots_after_one_failure(self):
@@ -1353,7 +1353,7 @@ sys.exit(update.worker(operation))
                 if scenario in ("begin-denied", "begin-prespawn"):
                     self.assertFalse(value["systemStarted"])
                 self.assertEqual(value["state"], expected, value)
-                self.assertEqual((directory / "config/dwm-titus/themes.toml").read_text(), "personal theme")
+                self.assertEqual((directory / "config/dwm-qud/themes.toml").read_text(), "personal theme")
                 if scenario in ("success", "migration") or scenario.startswith("activation-"):
                     self.assertEqual((directory / "state/elevations").read_text().splitlines(), ["one approval"])
                     self.assertEqual((directory / "config/quickshell/file").read_text(), "new shell")

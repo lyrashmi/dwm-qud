@@ -96,7 +96,7 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
-mkdir -p "$work/bin" "$home/.config/dwm-titus" "$home/.local/share/dwm-titus/config" "$runtime"
+mkdir -p "$work/bin" "$home/.config/dwm-qud" "$home/.local/share/dwm-qud/config" "$runtime"
 chmod 700 "$runtime"
 printf '#!/bin/sh\nexit 0\n' >"$work/bin/notify-send"
 chmod 755 "$work/bin/notify-send"
@@ -107,9 +107,9 @@ cat >"$work/bin/dwm-quickshell-state" <<EOF
 exec "$repo_dir/scripts/dwm-quickshell-state" "\$@"
 EOF
 chmod 755 "$work/bin/dwm-quickshell-state"
-cp "$repo_dir/config/"*.toml "$home/.local/share/dwm-titus/config/"
-cp "$repo_dir/config/themes.toml" "$repo_dir/config/window-rules.toml" "$home/.config/dwm-titus/"
-printf 'keys = [\n]\n' >"$home/.config/dwm-titus/hotkeys.toml"
+cp "$repo_dir/config/"*.toml "$home/.local/share/dwm-qud/config/"
+cp "$repo_dir/config/themes.toml" "$repo_dir/config/window-rules.toml" "$home/.config/dwm-qud/"
+printf 'keys = [\n]\n' >"$home/.config/dwm-qud/hotkeys.toml"
 cp -a "$repo_dir/config/quickshell" "$work/shell"
 cp "$repo_dir/tests/qml/KeyboardLayoutPanel.qml" "$work/shell/shell.qml"
 

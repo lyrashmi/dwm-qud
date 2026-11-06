@@ -41,7 +41,7 @@ with tempfile.TemporaryDirectory(prefix="desktop-focus-") as tmp, patch.dict(os.
         path = base / suffix
         path.mkdir()
         os.environ[key] = str(path)
-    state = base / "state/dwm-titus/desktop-update"
+    state = base / "state/dwm-qud/desktop-update"
     state.mkdir(parents=True)
     value = dict(schema=1, state="starting", detail="Waiting for approval", operation="a" * 32,
                  authorization="begin", percent=-1, startedAt=time.time())

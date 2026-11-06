@@ -5,10 +5,10 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 if [[ $(id -u) == 0 ]]; then
 	# Exercise the real unprivileged guard even in root-run Fedora containers.
-	mkdir -p "$work/repo/tests" "$work/repo/scripts/image" "$work/repo/config/starship"
+	mkdir -p "$work/repo/tests" "$work/repo/scripts/image" "$work/repo/config"
 	cp "$0" "$work/repo/tests/"
 	cp "$repo/scripts/image/seed-terminal.sh" "$repo/scripts/image/seed-apps.sh" "$work/repo/scripts/image/"
-	cp "$repo/config/starship/starship.toml" "$work/repo/config/starship/"
+	cp "$repo/config/starship.toml" "$work/repo/config/"
 	cp "$repo/scripts/seed-default-apps.sh" "$work/repo/scripts/"
 	chown -R nobody:"$(id -gn nobody)" "$work"
 	runuser -u nobody -- env TMPDIR="$work" bash "$work/repo/tests/test-image-user-defaults.sh"
@@ -16,7 +16,7 @@ if [[ $(id -u) == 0 ]]; then
 fi
 export HOME=$work/home XDG_CONFIG_HOME=$work/home/.config XDG_DATA_HOME=$work/home/.local/share
 export SKEL_DIR=$work/skel
-mkdir -p "$XDG_CONFIG_HOME/starship" "$work/bin" "$SKEL_DIR"
+mkdir -p "$XDG_CONFIG_HOME" "$work/bin" "$SKEL_DIR"
 cat >"$SKEL_DIR/.bashrc" <<'RC'
 # Stock Fedora .bashrc
 export PATH=$PATH:$HOME/.local/bin:$HOME/bin
@@ -34,7 +34,7 @@ cat >"$SKEL_DIR/.bash_profile" <<'RC'
 [ -f ~/.bashrc ] && . ~/.bashrc
 export PATH=$PATH:$HOME/.local/bin:$HOME/bin
 RC
-cp "$repo/config/starship/starship.toml" "$XDG_CONFIG_HOME/starship/"
+cp "$repo/config/starship.toml" "$XDG_CONFIG_HOME/"
 cp "$SKEL_DIR/.bashrc" "$HOME/.bashrc"
 cp "$SKEL_DIR/.bash_profile" "$HOME/.bash_profile"
 cat >"$work/bin/starship" <<'SH'
@@ -49,7 +49,7 @@ cp "$HOME/.bashrc" "$work/seeded"
 bash "$repo/scripts/image/seed-terminal.sh"
 cmp "$HOME/.bashrc" "$work/seeded"
 unset STARSHIP_CONFIG STARSHIP_SHELL
-bash --noprofile --rcfile "$HOME/.bashrc" -ic 'source "$HOME/.bashrc"; test "$STARSHIP_SHELL" = bash; test "$STARSHIP_CONFIG" = "$XDG_CONFIG_HOME/starship/starship.toml"; bash --noprofile --rcfile "$HOME/.bashrc" -ic "declare -F starship_precmd >/dev/null"' 2>"$work/interactive.err"
+bash --noprofile --rcfile "$HOME/.bashrc" -ic 'source "$HOME/.bashrc"; test "$STARSHIP_SHELL" = bash; test "$STARSHIP_CONFIG" = "$XDG_CONFIG_HOME/starship.toml"; bash --noprofile --rcfile "$HOME/.bashrc" -ic "declare -F starship_precmd >/dev/null"' 2>"$work/interactive.err"
 [[ $(wc -l <"$HOME/invocations") == 2 ]]
 rm "$HOME/invocations"
 bash --noprofile -c 'source "$HOME/.bashrc"; printf "noninteractive\n"' >"$work/output"

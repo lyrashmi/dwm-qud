@@ -2,7 +2,7 @@
 # Required image tools, downloaded and verified only in the disposable factory.
 set -euo pipefail
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-[[ $(id -u) == 0 && -f /etc/dwm-titus-factory-target && $(uname -m) == x86_64 ]]
+[[ $(id -u) == 0 && -f /etc/dwm-qud-factory-target && $(uname -m) == x86_64 ]]
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 starship_version=1.26.0
@@ -25,8 +25,8 @@ curl --fail --location --silent --show-error --retry 3 --connect-timeout 10 --ma
 printf '%s  %s\n' "$herdr_sha" "$work/herdr" | sha256sum --check --status
 install -o root -g root -m 0755 "$work/herdr" /usr/local/bin/herdr
 install -d /usr/local/share/doc/starship /usr/local/share/doc/herdr
-install -m 0644 /usr/share/dwm-titus-image/docs/licenses/starship-LICENSE /usr/local/share/doc/starship/LICENSE
-install -m 0644 /usr/share/dwm-titus-image/docs/licenses/herdr-LICENSE /usr/local/share/doc/herdr/LICENSE
+install -m 0644 /usr/share/dwm-qud-image/docs/licenses/starship-LICENSE /usr/local/share/doc/starship/LICENSE
+install -m 0644 /usr/share/dwm-qud-image/docs/licenses/herdr-LICENSE /usr/local/share/doc/herdr/LICENSE
 # Keep the corresponding pinned source with the redistributed Herdr binary.
 curl --fail --location --silent --show-error --retry 3 --connect-timeout 10 --max-time 120 \
 	"https://github.com/herdrdev/herdr/archive/refs/tags/v$herdr_version.tar.gz" \
@@ -36,4 +36,4 @@ install -m 0644 "$work/herdr-source.tar.gz" /usr/local/share/doc/herdr/source.ta
 starship --version
 herdr --version
 sha256sum /usr/local/bin/starship /usr/local/bin/herdr \
-	>/usr/share/dwm-titus-image/tool-sha256.txt
+	>/usr/share/dwm-qud-image/tool-sha256.txt

@@ -127,7 +127,7 @@ class PicomTests(unittest.TestCase):
             "inactive-opacity = 0.8", "inactive-opacity = 0.75"
         )
         self.assertEqual(self.path.read_text(), expected)
-        self.assertTrue(list((self.home / "state/dwm-titus/picom").glob("backup-*")))
+        self.assertTrue(list((self.home / "state/dwm-qud/picom").glob("backup-*")))
 
     def test_includes_preserved_and_changed_at_source(self):
         child = self.config / "opacity.conf"
@@ -604,7 +604,7 @@ class PicomTests(unittest.TestCase):
         original = '@include "' + str(vendor) + '"'
         self.path.write_text(original)
         process = {"pid": 123, "args": ["picom"]}
-        directory = self.config / "picom/include/dwm-titus-import"
+        directory = self.config / "picom/include/dwm-qud-import"
         with patch.object(picom, "MAX_IMPORT_FILES", 3):
             for value in range(4):
                 if vendor.exists():
@@ -667,13 +667,13 @@ class PicomTests(unittest.TestCase):
         self.assertEqual(picom.Configuration().opacity(), (0.7, 1))
         self.assertTrue(picom.status(False)["editable"])
         self.assertEqual(
-            len(list((self.config / "picom/include/dwm-titus-import").glob("*.conf"))),
+            len(list((self.config / "picom/include/dwm-qud-import").glob("*.conf"))),
             1,
         )
 
     def test_marker_outside_rules_is_rejected(self):
         config = self.write(
-            "# dwm-titus opacity defaults begin\n# opacity = .1; opacity = .2;\n# dwm-titus opacity defaults end\nrules=();"
+            "# dwm-qud opacity defaults begin\n# opacity = .1; opacity = .2;\n# dwm-qud opacity defaults end\nrules=();"
         )
         with self.assertRaises(picom.Error):
             self.apply(config)

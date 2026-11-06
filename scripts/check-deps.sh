@@ -1,7 +1,7 @@
 #!/bin/bash
 # shellcheck disable=SC2059
 # ─────────────────────────────────────────────────────────
-# dwm-titus dependency checker
+# dwm-qud dependency checker
 # Run before building to verify all required packages
 # are installed. Exit code 0 = all good, 1 = missing deps.
 # ─────────────────────────────────────────────────────────
@@ -120,7 +120,7 @@ print_package_profile() {
 	fi
 }
 
-echo "═══ dwm-titus Dependency Check ═══"
+echo "═══ dwm-qud Dependency Check ═══"
 echo ""
 echo "Distribution: $DISTRO_NAME"
 echo "Family: $DISTRO_FAMILY"
@@ -272,7 +272,7 @@ else
 			case "$choice" in
 			[yY] | [yY][eE][sS])
 				repair_status=0
-				if [ -f "$SCRIPT_DIR/../share/dwm-titus/desktop-install.json" ] &&
+				if [ -f "$SCRIPT_DIR/../share/dwm-qud/desktop-install.json" ] &&
 					[ -x "$SCRIPT_DIR/dwm-desktop-update" ]; then
 					"$SCRIPT_DIR/dwm-desktop-update" install-dependencies || repair_status=$?
 				elif command -v dwm-desktop-update >/dev/null 2>&1; then

@@ -260,7 +260,7 @@ class ReservationTests(Environment):
         recovery = self.api["reserve_operation"]("flatpak", "recover", now=11)
         malformed = (
             {**recovery, "provider": "fedora", "recovery_provider_phase": "fedora-executing"},
-            {**recovery, "provider": "dwm-titus", "recovery_provider_phase": "desktop-starting"},
+            {**recovery, "provider": "dwm-qud", "recovery_provider_phase": "desktop-starting"},
             {**recovery, "provider": "fedora", "recovery_phase": "interrupted",
              "recovery_provider_phase": "flatpak-user"},
             {**recovery, "provider": "mise", "recovery_phase": "interrupted",
@@ -422,11 +422,11 @@ class RunnerTests(Environment):
         headers = {
             ("fedora", "update"): "\033[32m\nUpdate system packages\033[0m\n",
             ("flatpak", "update"): "\033[32m\nUpdate Flatpak packages\033[0m\n",
-            ("dwm-titus", "update"): "\033[32m\nUpdate DWM-Titus\033[0m\n",
+            ("dwm-qud", "update"): "\033[32m\nUpdate DWM-Qud\033[0m\n",
             ("mise", "update"): "\033[32m\nUpdate mise tools\033[0m\n",
             ("fedora", "recover"): "\033[32m\nRecover system packages\033[0m\n",
             ("flatpak", "recover"): "\033[32m\nRecover Flatpak packages\033[0m\n",
-            ("dwm-titus", "recover"): "\033[32m\nRecover DWM-Titus\033[0m\n",
+            ("dwm-qud", "recover"): "\033[32m\nRecover DWM-Qud\033[0m\n",
             ("mise", "recover"): "\033[32m\nRecover mise tools\033[0m\n",
         }
         for (provider, action), expected in headers.items():
@@ -779,12 +779,12 @@ class RunnerTests(Environment):
                             "available": "b" * 40, "canUpdate": True, "detail": "Ready", "restart": "none"})
         done = json.dumps({"schema": 1, "state": "current", "installed": "b" * 40,
                            "available": "b" * 40, "canUpdate": False, "detail": "Done", "restart": "session"})
-        result, calls, phases = self.run_adapter("dwm-titus", "update", [ready, ready, done, done])
+        result, calls, phases = self.run_adapter("dwm-qud", "update", [ready, ready, done, done])
         self.assertEqual([call[0][1] for call in calls], ["status", "check", "start", "status"])
         self.assertEqual(calls[2][0][2], "b" * 40)
         self.assertEqual((result["outcome"], result["restart"]), ("succeeded", "session"))
         interrupted = json.dumps({**json.loads(ready), "state": "interrupted", "operation": "d" * 32})
-        _, calls, _ = self.run_adapter("dwm-titus", "recover", [interrupted, done])
+        _, calls, _ = self.run_adapter("dwm-qud", "recover", [interrupted, done])
         self.assertEqual([call[0][1] for call in calls], ["status", "recover"])
         self.assertEqual(calls[1][0][2], "d" * 32)
         recovered_state = json.dumps({
@@ -792,13 +792,13 @@ class RunnerTests(Environment):
             "canUpdate": False, "detail": "Previous desktop files restored. Log out and back in, then check again.",
             "restart": "session"
         })
-        recovered_res, calls, _ = self.run_adapter("dwm-titus", "recover", [interrupted, recovered_state])
+        recovered_res, calls, _ = self.run_adapter("dwm-qud", "recover", [interrupted, recovered_state])
         self.assertEqual((recovered_res["outcome"], recovered_res["phase"]), ("succeeded", "completed"))
         already_ready = json.dumps({
             "schema": 1, "state": "available", "installed": "a" * 40, "available": "b" * 40,
             "canUpdate": True, "detail": "A desktop update is available", "restart": "none"
         })
-        already_res, calls, _ = self.run_adapter("dwm-titus", "recover", [already_ready])
+        already_res, calls, _ = self.run_adapter("dwm-qud", "recover", [already_ready])
         self.assertEqual([call[0][1] for call in calls], ["status"])
         self.assertEqual((already_res["outcome"], already_res["phase"]), ("succeeded", "completed"))
         self.assertIn("already recovered", already_res["detail"])
@@ -811,7 +811,7 @@ class RunnerTests(Environment):
                     contextlib.redirect_stdout(io.StringIO()):
                 responses = [json.dumps({"state": state, "detail": state, "restart": "none"})
                              for state in ("building", "installing", final_state)]
-                result, calls, phases = self.run_adapter("dwm-titus", "recover", responses)
+                result, calls, phases = self.run_adapter("dwm-qud", "recover", responses)
                 self.assertEqual([call[0][1] for call in calls], ["status", "status", "status"])
                 self.assertEqual(phases, ["recovering"])
                 self.assertEqual(sleep.call_count, 2)

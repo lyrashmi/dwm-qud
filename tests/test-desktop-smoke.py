@@ -30,11 +30,11 @@ def main():
         config = work / "config"
         data = work / "data"
         shutil.copytree(REPO / "config/quickshell", config / "quickshell")
-        (config / "dwm-titus").mkdir()
+        (config / "dwm-qud").mkdir()
         for source in (REPO / "config").glob("*.toml"):
-            shutil.copy(source, config / "dwm-titus")
-        (data / "dwm-titus").mkdir(parents=True)
-        (data / "dwm-titus/scripts").symlink_to(REPO / "scripts", target_is_directory=True)
+            shutil.copy(source, config / "dwm-qud")
+        (data / "dwm-qud").mkdir(parents=True)
+        (data / "dwm-qud/scripts").symlink_to(REPO / "scripts", target_is_directory=True)
         applications = data / "applications"
         applications.mkdir()
         (applications / "smoke.desktop").write_text(

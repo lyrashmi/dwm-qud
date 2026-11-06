@@ -23,7 +23,7 @@ import tempfile
 import time
 import uuid
 
-SOURCE = "https://github.com/ChrisTitusTech/dwm-titus.git"
+SOURCE = "https://github.com/ChrisTitusTech/dwm-qud.git"
 UNIT = "dwm-desktop-update.service"
 ACTIVE = {"starting", "downloading", "dependencies", "building", "backing-up", "installing", "verifying", "activating", "recovering"}
 CHECK_SECONDS = 60
@@ -227,8 +227,8 @@ def source_revision(source):
 def paths():
     home = Path.home()
     config = Path(os.environ.get("XDG_CONFIG_HOME", str(home / ".config")))
-    data = Path(os.environ.get("XDG_DATA_HOME", str(home / ".local/share"))) / "dwm-titus"
-    state = Path(os.environ.get("XDG_STATE_HOME", str(home / ".local/state"))) / "dwm-titus/desktop-update"
+    data = Path(os.environ.get("XDG_DATA_HOME", str(home / ".local/share"))) / "dwm-qud"
+    state = Path(os.environ.get("XDG_STATE_HOME", str(home / ".local/state"))) / "dwm-qud/desktop-update"
     for path in (config, data, state):
         if not path.is_absolute() or path == Path("/"):
             raise RuntimeError("Desktop update paths must be absolute and non-root")
@@ -319,7 +319,7 @@ def guard_system_install(destdir, command, owner=None, user_state=None):
 
 
 def guarded_system_command(command, descriptors=()):
-    state = Path("/var/lib/dwm-titus/desktop-updates")
+    state = Path("/var/lib/dwm-qud/desktop-updates")
     previous_umask = os.umask(0o022)
     try:
         state.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -341,7 +341,7 @@ def guarded_system_command(command, descriptors=()):
 def installation():
     candidates = [Path(__file__).absolute().parent.parent, Path("/usr/local"), Path("/usr")]
     for prefix in candidates:
-        path = prefix / "share/dwm-titus/desktop-install.json"
+        path = prefix / "share/dwm-qud/desktop-install.json"
         if path.is_file():
             trusted_installation(path)
             return path, read_json(path)
@@ -366,9 +366,9 @@ def trusted_installation(manifest_path):
     trusted_file(manifest_path)
     manifest = read_json(manifest_path)
     prefix = Path(manifest["layout"]["prefix"])
-    if manifest_path != prefix / "share/dwm-titus/desktop-install.json" or manifest["source"] != SOURCE:
+    if manifest_path != prefix / "share/dwm-qud/desktop-install.json" or manifest["source"] != SOURCE:
         raise RuntimeError("Desktop installation identity does not match its trusted manifest")
-    trusted_file(prefix / "libexec/dwm-titus/dwm-desktop-update-root", executable=True)
+    trusted_file(prefix / "libexec/dwm-qud/dwm-desktop-update-root", executable=True)
 
 
 def record_system(args):
@@ -377,9 +377,9 @@ def record_system(args):
     layout = {key: str(Path(getattr(args, key)).absolute()) for key in ("prefix", "manprefix", "xsessions", "datadir")}
     prefix = Path(layout["prefix"])
     files = [prefix / "bin" / name for name in ["dwm", *args.commands]]
-    files += [prefix / "libexec/dwm-titus" / name for name in args.helpers]
+    files += [prefix / "libexec/dwm-qud" / name for name in args.helpers]
     files += [Path(layout["manprefix"]) / "man1/dwm.1", Path(layout["xsessions"]) / "dwm.desktop",
-              Path(layout["datadir"]) / "licenses/dwm-titus/capitaine-cursors/COPYING"]
+              Path(layout["datadir"]) / "licenses/dwm-qud/capitaine-cursors/COPYING"]
     for theme in sorted((source / "assets/cursors").glob("Capitaine-Cursors*")):
         files += [Path(layout["datadir"]) / "icons" / theme.name / path.relative_to(theme)
                   for path in theme.rglob("*") if path.is_file() or path.is_symlink()]
@@ -395,7 +395,7 @@ def record_system(args):
     manifest = {"schema": 1, "source": SOURCE, "revision": source_revision(source),
                 "layout": layout, "packages": sorted(set(args.packages)),
                 "files": {str(path): fingerprint(stage / str(path).lstrip("/")) for path in sorted(files)}}
-    target = stage / str(prefix / "share/dwm-titus/desktop-install.json").lstrip("/")
+    target = stage / str(prefix / "share/dwm-qud/desktop-install.json").lstrip("/")
     if stage == Path("/") and target.exists():
         try:
             trusted_installation(target)
@@ -937,7 +937,7 @@ def install_dependencies():
             if status_read(paths()[2])["state"] in ACTIVE | {"interrupted"}:
                 raise RuntimeError("Finish or recover the desktop update before repairing dependencies")
             manifest_path, manifest = installation()
-            helper = Path(manifest["layout"]["prefix"]) / "libexec/dwm-titus/dwm-desktop-update-root"
+            helper = Path(manifest["layout"]["prefix"]) / "libexec/dwm-qud/dwm-desktop-update-root"
             trusted_file(helper, executable=True)
             authorization = ["/usr/bin/pkexec"]
             try:
@@ -1046,8 +1046,8 @@ def prepare_user(source, operation):
     targets = [(data, "data"), (config / "quickshell", "quickshell")]
     migrator = source / "scripts/dwm-migrate-update-center-window-rule"
     clipboard_migrator = source / "scripts/dwm-migrate-clipboard-surface"
-    rules = config / "dwm-titus/window-rules.toml"
-    hotkeys = config / "dwm-titus/hotkeys.toml"
+    rules = config / "dwm-qud/window-rules.toml"
+    hotkeys = config / "dwm-qud/hotkeys.toml"
     if migrator.is_file() and not rules.is_symlink() and rules.is_file():
         # Only regular personal rules join the reversible migration. Preserve
         # custom symlinks and special files without blocking the desktop update.
@@ -1174,7 +1174,7 @@ def worker(operation):
             preview = read_json(directory / "preview.json")
             installed = read_json(Path(preview["manifest"]))
             prefix = Path(installed["layout"]["prefix"])
-            privileged = PrivilegedSession(prefix / "libexec/dwm-titus/dwm-desktop-update-root", operation,
+            privileged = PrivilegedSession(prefix / "libexec/dwm-qud/dwm-desktop-update-root", operation,
                                            preview["generation"], preview["available"])
             prepared = []
             system_started = False
@@ -1235,7 +1235,7 @@ def worker(operation):
                      "MANPREFIX=" + layout["manprefix"], "XSESSIONSDIR=" + layout["xsessions"], "DATADIR=" + layout["datadir"]],
                     writable=(source, stage), cwd=source, timeout=180, capture=False)
                 save_status(state, value, state="building", detail="Building [100%]", percent=100)
-                candidate = read_json(stage / str(prefix / "share/dwm-titus/desktop-install.json").lstrip("/"))
+                candidate = read_json(stage / str(prefix / "share/dwm-qud/desktop-install.json").lstrip("/"))
                 if candidate["layout"] != installed["layout"]:
                     raise RuntimeError("Desktop file layout changed; use the documented source installer for this update")
                 candidate["source"] = installed["source"]
@@ -1298,7 +1298,7 @@ def worker(operation):
                 if tree_manifest(config / "quickshell") != shell_replacement:
                     raise RuntimeError("Managed Quickshell verification failed")
                 for entry in prepared:
-                    if entry["target"] == str(config / "dwm-titus/window-rules.toml") and user_manifest(config / "dwm-titus/window-rules.toml") != entry["replacement"]:
+                    if entry["target"] == str(config / "dwm-qud/window-rules.toml") and user_manifest(config / "dwm-qud/window-rules.toml") != entry["replacement"]:
                         raise RuntimeError("Personal configuration migration verification failed")
                 record_user(source)
                 receipt = read_json(state / "installed.json")
@@ -1393,7 +1393,7 @@ def recover(operation):
         preview = read_json(directory / "preview.json")
         trusted_installation(Path(preview["manifest"]))
         prefix = Path(preview["manifest"]).parents[2]
-        with PrivilegedSession(prefix / "libexec/dwm-titus/dwm-desktop-update-root", operation,
+        with PrivilegedSession(prefix / "libexec/dwm-qud/dwm-desktop-update-root", operation,
                                "0" * 64, "0" * 40, mode="recover") as privileged:
             if (directory / "completion.json").exists():
                 completion = read_json(directory / "completion.json")

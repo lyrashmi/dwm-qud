@@ -2,7 +2,7 @@
 # Sanitize the powered-off factory filesystem and validate before capture.
 set -euo pipefail
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-[[ -f /etc/dwm-titus-image && $(id -u) == 0 ]]
+[[ -f /etc/dwm-qud-image && $(id -u) == 0 ]]
 [[ $(getent passwd imagebuilder | cut -d: -f6) == /home/imagebuilder ]]
 factory_uid=$(id -u imagebuilder)
 factory_gid=$(id -g imagebuilder)
@@ -11,7 +11,7 @@ userdel --remove imagebuilder
 : >/etc/fstab
 : >/etc/machine-id
 rm -f /var/lib/dbus/machine-id /var/lib/systemd/random-seed /etc/ssh/ssh_host_*
-rm -f /etc/sudoers.d/90-dwm-titus-install /etc/dwm-titus-factory-target
+rm -f /etc/sudoers.d/90-dwm-qud-install /etc/dwm-qud-factory-target
 rm -f /etc/adjtime /etc/kernel/cmdline /etc/kernel/entry-token
 rm -f /etc/passwd- /etc/shadow- /etc/group- /etc/gshadow-
 rm -f /var/lib/systemd/credential.secret
@@ -19,14 +19,14 @@ rm -f /etc/pki/akmods/private/private_key.priv /etc/pki/akmods/certs/public_key.
 rm -rf /var/lib/AccountsService/users/* /var/lib/AccountsService/icons/*
 rm -rf /etc/NetworkManager/system-connections/* /var/lib/NetworkManager/*
 rm -rf /boot/loader/entries/* /boot/grub2/grub.cfg /boot/grub2/grubenv /boot/efi/EFI/fedora/grub.cfg
-rm -rf /opt/dwm-titus
+rm -rf /opt/dwm-qud
 rm -rf /root/* /root/.[!.]* /root/..?* /tmp/* /var/tmp/* /var/log/*
 rm -rf /var/cache/dnf /var/cache/libdnf5 /var/cache/akmods
 printf 'localhost\n' >/etc/hostname
 # The factory account owned these files before capture. Never give the first
 # installed account write access to system assets or the root-run finish helper.
 find /etc /usr /opt /var /boot \( -uid "$factory_uid" -o -gid "$factory_gid" \) -exec chown -h root:root {} +
-shared_assets=(/usr/share/dwm-titus-image /usr/local/share/fonts/dwm-titus
+shared_assets=(/usr/share/dwm-qud-image /usr/local/share/fonts/dwm-qud
 	/usr/share/themes/Nordic /usr/share/icons/Capitaine-Cursors*)
 chown -R root:root "${shared_assets[@]}"
 chmod -R go-w "${shared_assets[@]}"
@@ -35,7 +35,7 @@ chmod -R go-w "${shared_assets[@]}"
 # Reuse the package contract instead of maintaining a second RPM list.
 # Loaded from the installed image, not the build host.
 # shellcheck disable=SC1091
-source /usr/share/dwm-titus-image/scripts/dwm-packages.sh
+source /usr/share/dwm-qud-image/scripts/dwm-packages.sh
 mapfile -t packages < <({
 	dwm_packages fedora full
 	dwm_packages fedora terminal
@@ -44,11 +44,11 @@ mapfile -t packages < <({
 	dwm_packages fedora image-desktop
 } | sort -u)
 rpm -q "${packages[@]}" >/dev/null
-python3 /usr/share/dwm-titus-image/scripts/image/check-packagekit.py
-[[ -f /usr/share/dnf5/libdnf.conf.d/40-dwm-titus.conf ]]
-[[ -x /usr/local/libexec/dwm-titus/dwm-initial-update-root ]]
-[[ -f /var/lib/dwm-titus/initial-update/pending.json ]]
-[[ ! -e /var/lib/dwm-titus/initial-update/complete.json ]]
+python3 /usr/share/dwm-qud-image/scripts/image/check-packagekit.py
+[[ -f /usr/share/dnf5/libdnf.conf.d/40-dwm-qud.conf ]]
+[[ -x /usr/local/libexec/dwm-qud/dwm-initial-update-root ]]
+[[ -f /var/lib/dwm-qud/initial-update/pending.json ]]
+[[ ! -e /var/lib/dwm-qud/initial-update/complete.json ]]
 python3 - <<'PY'
 import libdnf5
 base = libdnf5.base.Base()
@@ -59,7 +59,7 @@ assert not config.get_assumeyes_option().get_value()
 assert not config.get_fastestmirror_option().get_value()
 assert config.get_pkg_gpgcheck_option().get_value()
 PY
-[[ -z $(find /usr/share/dwm-titus-image \( -name '.env' -o -name '.env.*' -o -name '.envrc' \) -print -quit) ]]
+[[ -z $(find /usr/share/dwm-qud-image \( -name '.env' -o -name '.env.*' -o -name '.envrc' \) -print -quit) ]]
 missing=0
 # maim uses libslop for region selection; RPM resolves its shared dependencies.
 for command in dwm quickshell fastfetch starship herdr brave-origin celluloid mpv sxiv maim xclip xdotool xrandr xset xinput \
@@ -76,7 +76,7 @@ for command in dwm quickshell fastfetch starship herdr brave-origin celluloid mp
 	fi
 done
 ((missing == 0))
-sha256sum --check /usr/share/dwm-titus-image/tool-sha256.txt
+sha256sum --check /usr/share/dwm-qud-image/tool-sha256.txt
 for command in maim dwm; do
 	libraries=$(ldd "$(command -v "$command")")
 	if [[ $libraries == *'not found'* ]]; then
@@ -91,6 +91,6 @@ flatpak --system info it.mijorus.gearlever >/dev/null
 [[ -d /usr/share/themes/Nordic && -f /usr/share/xsessions/dwm.desktop ]]
 [[ ! -s /etc/machine-id && ! -s /etc/fstab ]]
 [[ -z $(awk -F: '$3 >= 1000 && $3 < 60000 {print $1}' /etc/passwd) ]]
-[[ ! -e /etc/sudoers.d/90-dwm-titus-install ]]
+[[ ! -e /etc/sudoers.d/90-dwm-qud-install ]]
 if compgen -G '/etc/ssh/ssh_host_*' >/dev/null; then exit 1; fi
 printf 'Offline image feature dependencies and factory identity: PASS\n'

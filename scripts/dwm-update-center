@@ -51,7 +51,7 @@ class ProviderMetadata:
 
 REGISTRY = (
     ProviderMetadata("fedora", "Fedora", True, "scan_fedora", can_recover=True),
-    ProviderMetadata("dwm-titus", "DWM-Titus", True, "scan_desktop", can_recover=True),
+    ProviderMetadata("dwm-qud", "DWM-Qud", True, "scan_desktop", can_recover=True),
     # Optional-provider recovery means supported recheck/retry, never rollback.
     ProviderMetadata("flatpak", "Flatpak", False, "scan_flatpak", can_recover=True),
     ProviderMetadata("mise", "Mise", False, "scan_mise", can_recover=True),
@@ -98,7 +98,7 @@ def validate_operation(value):
     if isinstance(value, dict) and set(value) == OPERATION_FIELDS - {"launcher_pid", "launcher_identity"}:
         value = {**value, "launcher_pid": 0, "launcher_identity": ""}
     providers = {meta.identifier for meta in REGISTRY}
-    phase_provider = {"fedora-executing": "fedora", "fedora-dnf": "fedora", "desktop-starting": "dwm-titus",
+    phase_provider = {"fedora-executing": "fedora", "fedora-dnf": "fedora", "desktop-starting": "dwm-qud",
                       "flatpak-system": "flatpak", "flatpak-system-complete": "flatpak",
                       "flatpak-user": "flatpak", "flatpak-user-complete": "flatpak",
                       "mise-inventory": "mise", "mise-update": "mise", "mise-recheck": "mise"}
@@ -329,7 +329,7 @@ def launch_operation(provider, action="update", *, terminal=None, runner=None, n
 def rescan_provider(provider):
     scanners = discover_scanners()
     if provider in scanners:
-        snapshot(Path(cache_root()) / "dwm-titus/update-center.json", scanners, force=True, provider=provider)
+        snapshot(Path(cache_root()) / "dwm-qud/update-center.json", scanners, force=True, provider=provider)
 
 
 def terminal_closed(operation, now=None):
@@ -870,7 +870,7 @@ def scan_lock(identifier):
 def coordination_path():
     """One state domain per user; runtime/cache availability cannot split locks."""
     state = os.environ.get("XDG_STATE_HOME") or str(Path.home() / ".local/state")
-    return Path(state) / "dwm-titus/update-center"
+    return Path(state) / "dwm-qud/update-center"
 
 
 @contextlib.contextmanager
@@ -1049,7 +1049,7 @@ def desktop_status(payload):
 def scan_desktop():
     helper = trusted_desktop_helper()
     if helper is None:
-        return ProviderResult("dwm-titus", "unavailable", error_code="missing-provider",
+        return ProviderResult("dwm-qud", "unavailable", error_code="missing-provider",
                               detail="Trusted installed desktop updater unavailable")
     value = desktop_status(run_bounded([helper, "status"], timeout=10))
     if value["state"] not in DESKTOP_ACTIVE | {"interrupted"} and not value.get("statusInvalid"):
@@ -1057,12 +1057,12 @@ def scan_desktop():
     state = value["state"]
     items = ()
     if value["installed"] != "unknown" and value["available"] != "unknown" and value["installed"] != value["available"]:
-        items = (ItemResult("update", "DWM-Titus", value["installed"], value["available"],
-                            value["available"], url="https://github.com/ChrisTitusTech/dwm-titus"),)
+        items = (ItemResult("update", "DWM-Qud", value["installed"], value["available"],
+                            value["available"], url="https://github.com/ChrisTitusTech/dwm-qud"),)
     busy = state in DESKTOP_ACTIVE | {"checking", "interrupted"}
     code = "interrupted" if state == "interrupted" else "busy" if busy else "scan-failed" if state == "failed" else ""
     detail = value["detail"] + ("; restart: " + value["restart"] if value["restart"] != "none" else "")
-    return validate_result(ProviderResult("dwm-titus", "restricted" if busy or state in {"blocked", "failed"} else "available",
+    return validate_result(ProviderResult("dwm-qud", "restricted" if busy or state in {"blocked", "failed"} else "available",
                           len(items), 1, update_available=value["canUpdate"] and not busy,
                           error_code=code, detail=detail, restart=value["restart"], items=items))
 
@@ -1410,7 +1410,7 @@ def main(argv=None):
                 escape(str(value[field])) for field in ("operation", "provider", "action", "phase", "outcome"))
                 + "\ncomplete\taction\n")
             return 0
-        path = Path(cache_root()) / "dwm-titus/update-center.json"
+        path = Path(cache_root()) / "dwm-qud/update-center.json"
         # The guarded persistence layer rejects invalid/unsafe paths. Optional
         # cache configuration must not suppress independently coordinated scans.
         scanners = discover_scanners()

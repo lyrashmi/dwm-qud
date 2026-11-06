@@ -24,15 +24,15 @@ data_root="$work/system data"
 config_home="$test_home/.config"
 xdg_data_home="$test_home/.local/share"
 state_home="$test_home/.local/state"
-data_dir="$xdg_data_home/dwm-titus"
+data_dir="$xdg_data_home/dwm-qud"
 output="$work/output"
 install_sources="$work/install-sources"
 test_bin="$work/bin"
 source_update_probe="$work/source-update-probe"
 
-mkdir -p "$test_repo" "$test_bin" "$prefix/bin" "$prefix/libexec/dwm-titus" \
+mkdir -p "$test_repo" "$test_bin" "$prefix/bin" "$prefix/libexec/dwm-qud" \
 	"$manprefix/man1" "$xsessions_dir" \
-	"$data_root/icons" "$data_root/licenses/dwm-titus/capitaine-cursors" \
+	"$data_root/icons" "$data_root/licenses/dwm-qud/capitaine-cursors" \
 	"$config_home/systemd/user" "$data_dir"
 cp -a \
 	"$repo_dir/Makefile" \
@@ -55,9 +55,9 @@ make -s -C "$test_repo" --no-print-directory \
 
 install -Dm755 "$test_repo/dwm" "$prefix/bin/dwm"
 sed "s|@PREFIX@|$prefix|g" "$test_repo/scripts/dwm-settings-display-root" |
-	install -Dm755 /dev/stdin "$prefix/libexec/dwm-titus/dwm-settings-display-root"
+	install -Dm755 /dev/stdin "$prefix/libexec/dwm-qud/dwm-settings-display-root"
 sed "s|@PREFIX@|$prefix|g" "$test_repo/scripts/dwm-desktop-update-root" |
-	install -Dm755 /dev/stdin "$prefix/libexec/dwm-titus/dwm-desktop-update-root"
+	install -Dm755 /dev/stdin "$prefix/libexec/dwm-qud/dwm-desktop-update-root"
 while IFS= read -r install_source; do
 	[ -n "$install_source" ] || continue
 	install -Dm755 "$test_repo/$install_source" \
@@ -83,7 +83,7 @@ for cursor_source in "$test_repo"/assets/cursors/Capitaine-Cursors*; do
 	cp -a "$cursor_source" "$data_root/icons/"
 done
 install -Dm644 "$test_repo/assets/cursors/COPYING" \
-	"$data_root/licenses/dwm-titus/capitaine-cursors/COPYING"
+	"$data_root/licenses/dwm-qud/capitaine-cursors/COPYING"
 set --
 while IFS= read -r install_source; do
 	set -- "$@" "${install_source##*/}"

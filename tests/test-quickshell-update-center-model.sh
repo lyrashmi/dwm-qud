@@ -37,7 +37,7 @@ command -v quickshell >/dev/null 2>&1 || {
 
 tmp=$(mktemp -d "${DWM_TEST_WORKSPACE:-${DWM_TEST_TMP_ROOT:-${TMPDIR:-/tmp}}}/update-center-qml.XXXXXX")
 trap 'rm -rf -- "$tmp"' EXIT HUP INT TERM
-mkdir -p "$tmp/config/core" "$tmp/config/updatecenter" "$tmp/data/dwm-titus/scripts" "$tmp/state"
+mkdir -p "$tmp/config/core" "$tmp/config/updatecenter" "$tmp/data/dwm-qud/scripts" "$tmp/state"
 cp "$repo/tests/quickshell-update-center-model.qml" "$tmp/config/shell.qml"
 cp "$repo/config/quickshell/core/Commands.qml" "$tmp/config/core/Commands.qml"
 cp "$repo/config/quickshell/updatecenter/UpdateCenterModel.qml" "$tmp/config/updatecenter/UpdateCenterModel.qml"
@@ -70,7 +70,7 @@ emit()
 GLib.MainLoop().run()
 PYFIXTURE
 
-fixture=$tmp/data/dwm-titus/scripts/dwm-update-center
+fixture=$tmp/data/dwm-qud/scripts/dwm-update-center
 cat >"$fixture" <<'EOF'
 #!/bin/sh
 set -eu
@@ -124,10 +124,10 @@ launch)
 		printf '%s\t%s\t%s\t%s\t%s\n' "$op" fedora update completed succeeded >"$root/operation"
 		emit_operation "$op" fedora update launched pending
 		;;
-	dwm-titus)
+	dwm-qud)
 		op=op-00000000000000000000000000000002
-		printf '%s\t%s\t%s\t%s\t%s\n' "$op" dwm-titus update failed failed >"$root/operation"
-		emit_operation "$op" dwm-titus update launched pending
+		printf '%s\t%s\t%s\t%s\t%s\n' "$op" dwm-qud update failed failed >"$root/operation"
+		emit_operation "$op" dwm-qud update launched pending
 		;;
 	flatpak)
 		op=op-00000000000000000000000000000003
@@ -150,7 +150,7 @@ esac
 EOF
 chmod 755 "$fixture"
 
-settings=$tmp/data/dwm-titus/scripts/dwm-update-center-settings
+settings=$tmp/data/dwm-qud/scripts/dwm-update-center-settings
 cat >"$settings" <<'EOF'
 #!/bin/sh
 set -eu

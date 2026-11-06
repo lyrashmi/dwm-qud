@@ -73,7 +73,7 @@ if args[0] == 'info':
     print(os.environ.get('CONTRACT_ROOTLESS', 'true'))
     sys.exit(int(os.environ.get('CONTRACT_INFO_STATUS', '0')))
 if args[0] == 'build':
-    assert args == ['build', '--tag', 'localhost/dwm-titus-tests:fedora-44',
+    assert args == ['build', '--tag', 'localhost/dwm-qud-tests:fedora-44',
                     '--file', 'tests/containers/fedora-44/Containerfile', '-'], args
     archive = tarfile.open(fileobj=io.BytesIO(sys.stdin.buffer.read()))
     assert set(archive.getnames()) == {'scripts/dwm-packages.sh',
@@ -90,7 +90,7 @@ assert args[1:7] == ['--rm', '--interactive', '--network=private',
                       f'type=bind,src={work}/repository/.git,dst=/source/repository,ro=true,bind-nonrecursive'], args
 assert args[7:9] == ['--mount',
                     f'type=bind,src={work}/current worktree,dst=/source/worktree,ro=true,bind-nonrecursive'], args
-assert args[9:13] == ['localhost/dwm-titus-tests:fedora-44', 'bash', '-c', args[12]], args
+assert args[9:13] == ['localhost/dwm-qud-tests:fedora-44', 'bash', '-c', args[12]], args
 assert args[13] == 'container-stage', args
 assert len(args[14]) == 40, args
 script = args[12]

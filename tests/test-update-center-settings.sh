@@ -27,7 +27,7 @@ with tempfile.TemporaryDirectory(prefix="update-center-settings-", dir=os.enviro
     for path in (home, config, runtime):
         path.mkdir(mode=0o700)
     env = dict(os.environ, HOME=str(home), XDG_CONFIG_HOME=str(config), XDG_RUNTIME_DIR=str(runtime))
-    state = config / "dwm-titus/update-center.conf"
+    state = config / "dwm-qud/update-center.conf"
 
     def run(*args, error=None, environment=None):
         result = subprocess.run([str(helper), *args], env=environment or env, text=True, capture_output=True)
@@ -138,7 +138,7 @@ with tempfile.TemporaryDirectory(prefix="update-center-settings-", dir=os.enviro
         run("set", "300", "enabled", "absent", error="another preferences operation is still running")
         assert not state.exists()
     managed = state.parent
-    moved = config / "saved-dwm-titus"
+    moved = config / "saved-dwm-qud"
     managed.rename(moved)
     managed.symlink_to(moved, target_is_directory=True)
     status("unavailable")
@@ -243,7 +243,7 @@ runpy.run_path(helper, run_name="__main__")
     clean = root / "clean"
     clean.mkdir(mode=0o700)
     status(environment=dict(env, XDG_CONFIG_HOME=str(clean)))
-    assert not (clean / "dwm-titus").exists()
+    assert not (clean / "dwm-qud").exists()
 assert tree() == before, "test suite mutated repository files"
 print("PASS: update center preferences defaults, boundaries, path guards, transactions, isolation and repository immutability")
 PY

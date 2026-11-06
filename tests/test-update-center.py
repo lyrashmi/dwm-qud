@@ -104,7 +104,7 @@ class SnapshotProtocolTests(unittest.TestCase):
 
     def test_fixed_order_and_preserved_item_fields(self):
         self.assertEqual([p.identifier for p in self.api["REGISTRY"]],
-                         ["fedora", "dwm-titus", "flatpak", "mise"])
+                         ["fedora", "dwm-qud", "flatpak", "mise"])
         result = self.api["parse_fedora_snapshot"](source(ROW))
         self.assertEqual(result.pending, 1)
         self.assertIs(type(result.pending), int)
@@ -230,7 +230,7 @@ class CacheTests(unittest.TestCase):
         environment = patch.dict(os.environ, {"XDG_RUNTIME_DIR": "", "XDG_STATE_HOME": str(Path(self.temp.name) / "state")})
         environment.start()
         self.addCleanup(environment.stop)
-        self.path = Path(self.temp.name) / "cache/dwm-titus/update-center.json"
+        self.path = Path(self.temp.name) / "cache/dwm-qud/update-center.json"
         self.good = self.api["parse_fedora_snapshot"](source(ROW))
         self.assertTrue("snapshot" in self.api, "last-good cache interface is missing")
 
@@ -258,11 +258,11 @@ class CacheTests(unittest.TestCase):
         self.assertEqual(self.scan({"fedora": forbidden})[0].pending, 1)
 
     def test_failure_retains_last_good_independently_and_recovers(self):
-        desktop = self.api["ProviderResult"]("dwm-titus", pending=0)
-        self.scan({"fedora": lambda: self.good, "dwm-titus": lambda: desktop}, force=True)
+        desktop = self.api["ProviderResult"]("dwm-qud", pending=0)
+        self.scan({"fedora": lambda: self.good, "dwm-qud": lambda: desktop}, force=True)
         def fail():
             raise ValueError("bad data")
-        results = self.scan({"fedora": fail, "dwm-titus": lambda: desktop}, force=True)
+        results = self.scan({"fedora": fail, "dwm-qud": lambda: desktop}, force=True)
         self.assertEqual((results[0].pending, results[0].freshness, results[0].last_success), (1, "stale", 100))
         self.assertEqual(results[0].items, self.good.items)
         self.assertFalse(results[0].update_available)
@@ -414,15 +414,15 @@ class CacheTests(unittest.TestCase):
         self.assertEqual([p.identifier for p in self.api["read_cache"](self.path)], ["fedora"])
 
     def test_targeted_rescan_preserves_other_active_provider_and_fills_missing_core(self):
-        desktop = self.api["ProviderResult"]("dwm-titus", last_success=100)
+        desktop = self.api["ProviderResult"]("dwm-qud", last_success=100)
         self.api["write_cache"](self.path, [desktop])
-        results = self.scan({"fedora": lambda: self.good, "dwm-titus": lambda: desktop}, provider="dwm-titus")
-        self.assertEqual([p.identifier for p in results], ["fedora", "dwm-titus"])
+        results = self.scan({"fedora": lambda: self.good, "dwm-qud": lambda: desktop}, provider="dwm-qud")
+        self.assertEqual([p.identifier for p in results], ["fedora", "dwm-qud"])
         self.assertEqual(results[0].pending, 1)
         def forbidden():
             self.fail("targeted rescan must retain cached active Fedora")
-        results = self.scan({"fedora": forbidden, "dwm-titus": lambda: desktop}, provider="dwm-titus")
-        self.assertEqual([p.identifier for p in results], ["fedora", "dwm-titus"])
+        results = self.scan({"fedora": forbidden, "dwm-qud": lambda: desktop}, provider="dwm-qud")
+        self.assertEqual([p.identifier for p in results], ["fedora", "dwm-qud"])
         self.assertEqual(results[0].pending, 1)
 
 
@@ -442,9 +442,9 @@ class ScanIsolationTests(CacheTests):
             return self.api["parse_fedora_snapshot"](payload)
         def desktop():
             marker.write_text("completed")
-            return self.api["ProviderResult"]("dwm-titus")
+            return self.api["ProviderResult"]("dwm-qud")
         started = time.monotonic()
-        results = self.scan({"fedora": hung, "dwm-titus": desktop}, force=True)
+        results = self.scan({"fedora": hung, "dwm-qud": desktop}, force=True)
         self.assertLess(time.monotonic() - started, 2)
         self.assertEqual(marker.read_text(), "completed")
         self.assertEqual((results[0].pending, results[0].freshness, results[0].error_code), (1, "stale", "timeout"))
@@ -464,8 +464,8 @@ class ScanIsolationTests(CacheTests):
         for bad in (replace(self.good, status={}), replace(self.good, identifier=[]),
                     replace(self.good, items=None), replace(self.good, error_code=[])):
             with self.subTest(bad=bad):
-                desktop = self.api["ProviderResult"]("dwm-titus")
-                results = self.scan({"fedora": lambda: bad, "dwm-titus": lambda: desktop}, force=True)
+                desktop = self.api["ProviderResult"]("dwm-qud")
+                results = self.scan({"fedora": lambda: bad, "dwm-qud": lambda: desktop}, force=True)
                 self.assertEqual(results[0].error_code, "malformed")
                 self.assertEqual(results[1].freshness, "fresh")
 
@@ -545,7 +545,7 @@ class ScanIsolationTests(CacheTests):
             self.assertEqual(list(runtime.iterdir()), [])
             runtime.chmod(0o777)
             self.assertEqual(self.scan(force=True)[0].freshness, "fresh")
-        self.assertTrue((Path(os.environ["XDG_STATE_HOME"]) / "dwm-titus/update-center/.scan-fedora").exists())
+        self.assertTrue((Path(os.environ["XDG_STATE_HOME"]) / "dwm-qud/update-center/.scan-fedora").exists())
 
     def test_cross_process_runtime_variation_never_splits_scanner_or_cache_ownership(self):
         import select
@@ -604,8 +604,8 @@ class ScanIsolationTests(CacheTests):
 
     def test_concurrent_different_provider_rescans_preserve_both_results(self):
         import threading
-        desktop = self.api["ProviderResult"]("dwm-titus")
-        self.scan({"fedora": lambda: self.good, "dwm-titus": lambda: desktop}, force=True)
+        desktop = self.api["ProviderResult"]("dwm-qud")
+        self.scan({"fedora": lambda: self.good, "dwm-qud": lambda: desktop}, force=True)
         entered, release = threading.Event(), threading.Event()
         def slow():
             entered.set()
@@ -613,15 +613,15 @@ class ScanIsolationTests(CacheTests):
             return self.good
         def forbidden():
             self.fail("targeted rescan must not scan the other cached provider")
-        first = threading.Thread(target=lambda: self.scan({"fedora": slow, "dwm-titus": forbidden}, provider="fedora"))
+        first = threading.Thread(target=lambda: self.scan({"fedora": slow, "dwm-qud": forbidden}, provider="fedora"))
         first.start()
         self.assertTrue(entered.wait(1))
         try:
-            self.scan({"fedora": forbidden, "dwm-titus": lambda: desktop}, provider="dwm-titus")
+            self.scan({"fedora": forbidden, "dwm-qud": lambda: desktop}, provider="dwm-qud")
         finally:
             release.set()
             first.join(3)
-        self.assertEqual([p.identifier for p in self.api["read_cache"](self.path)], ["fedora", "dwm-titus"])
+        self.assertEqual([p.identifier for p in self.api["read_cache"](self.path)], ["fedora", "dwm-qud"])
 
 
 class OptionalFailureTests(unittest.TestCase):
@@ -703,7 +703,7 @@ class OptionalFailureTests(unittest.TestCase):
                     function = self.api["discover_scanners"]
                     globals_ = function.__globals__
                     cores = {"fedora": lambda: self.api["ProviderResult"]("fedora"),
-                             "dwm-titus": lambda: self.api["ProviderResult"]("dwm-titus")}
+                             "dwm-qud": lambda: self.api["ProviderResult"]("dwm-qud")}
                     good = self.api["ProviderResult"](identifier, managed=1, pending=1, items=(
                         self.api["ItemResult"]("update", "item", "1", "2", "item"),))
                     if successful:
@@ -713,7 +713,7 @@ class OptionalFailureTests(unittest.TestCase):
                     self.api["snapshot"](path, {**cores, identifier: fail}, force=True, now=101)
                     with patch.dict(globals_, optional_executable=lambda name: None):
                         scanners = function()
-                    self.assertEqual(list(scanners), ["fedora", "dwm-titus"])
+                    self.assertEqual(list(scanners), ["fedora", "dwm-qud"])
                     def forbidden():
                         self.fail("ordinary cache read must not execute commands")
                     cached = self.api["snapshot"](path, {key: forbidden for key in scanners}, now=102)
@@ -739,7 +739,7 @@ class OptionalFailureTests(unittest.TestCase):
                             patch.dict(os.environ, XDG_STATE_HOME=str(Path(folder) / "state")):
                         path = Path(folder) / "cache/snapshot.json"
                         cores = {name: (lambda name=name: self.api["ProviderResult"](name))
-                                 for name in ("fedora", "dwm-titus")}
+                                 for name in ("fedora", "dwm-qud")}
                         if cached:
                             self.api["snapshot"](path, {**cores, identifier: lambda: self.api["ProviderResult"](
                                 identifier, managed=1)}, force=True, now=100)
@@ -804,7 +804,7 @@ class RegistryDiscoveryTests(unittest.TestCase):
         self.api = runpy.run_path(str(HELPER))
 
     def test_all_providers_declare_safe_discovery_and_operation_capabilities(self):
-        self.assertEqual([p.identifier for p in self.api["REGISTRY"]], ["fedora", "dwm-titus", "flatpak", "mise"])
+        self.assertEqual([p.identifier for p in self.api["REGISTRY"]], ["fedora", "dwm-qud", "flatpak", "mise"])
         for provider in self.api["REGISTRY"]:
             self.assertRegex(provider.identifier, r"^[a-z][a-z0-9-]*$")
             self.assertTrue(callable(getattr(provider, "discover", None)), "provider discover function missing")
@@ -832,9 +832,9 @@ class RegistryDiscoveryTests(unittest.TestCase):
             path = Path(folder) / "cache/update-center.json"
             with patch.dict(os.environ, XDG_STATE_HOME=str(Path(folder) / "state")):
                 results = self.api["snapshot"](path, {"fedora": lambda: self.api["ProviderResult"]("fedora"),
-                             "dwm-titus": lambda: self.api["ProviderResult"]("dwm-titus"),
+                             "dwm-qud": lambda: self.api["ProviderResult"]("dwm-qud"),
                              "flatpak": lambda: None, "mise": lambda: None}, force=True, now=100)
-                self.assertEqual([r.identifier for r in results], ["fedora", "dwm-titus"])
+                self.assertEqual([r.identifier for r in results], ["fedora", "dwm-qud"])
                 self.api["snapshot"](path, {"mise": lambda: self.api["ProviderResult"]("mise")}, force=True, now=101)
                 result = self.api["snapshot"](path, {"mise": lambda: None}, force=True, now=102)[0]
                 self.assertEqual((result.identifier, result.freshness, result.error_code), ("mise", "stale", "unsupported"))
@@ -844,7 +844,7 @@ class RegistryDiscoveryTests(unittest.TestCase):
         from unittest.mock import patch
         function = self.api["discover_scanners"]
         with patch.dict(function.__globals__, optional_executable=lambda name: None):
-            self.assertEqual(list(function()), ["fedora", "dwm-titus"])
+            self.assertEqual(list(function()), ["fedora", "dwm-qud"])
 
     def test_count_and_item_bounds_fail_closed(self):
         constructor = self.api["ProviderResult"]
@@ -870,11 +870,11 @@ class RegistryDiscoveryTests(unittest.TestCase):
         from unittest.mock import patch
         with workspace() as folder, patch.dict(os.environ, XDG_STATE_HOME=str(Path(folder) / "state")):
             path = Path(folder) / "cache/update-center.json"
-            good = self.api["ProviderResult"]("dwm-titus", pending=1, items=(
-                self.api["ItemResult"]("update", "DWM-Titus", "a" * 40, "b" * 40, "b" * 40),))
-            self.api["snapshot"](path, {"dwm-titus": lambda: good}, force=True, now=100)
-            failed = self.api["ProviderResult"]("dwm-titus", "unavailable", error_code="missing-provider", detail="Missing helper")
-            result = self.api["snapshot"](path, {"dwm-titus": lambda: failed}, force=True, now=101)[0]
+            good = self.api["ProviderResult"]("dwm-qud", pending=1, items=(
+                self.api["ItemResult"]("update", "DWM-Qud", "a" * 40, "b" * 40, "b" * 40),))
+            self.api["snapshot"](path, {"dwm-qud": lambda: good}, force=True, now=100)
+            failed = self.api["ProviderResult"]("dwm-qud", "unavailable", error_code="missing-provider", detail="Missing helper")
+            result = self.api["snapshot"](path, {"dwm-qud": lambda: failed}, force=True, now=101)[0]
             self.assertEqual((result.pending, result.freshness, result.error_code, result.last_success),
                              (1, "stale", "missing-provider", 100))
 
@@ -1052,7 +1052,7 @@ class DesktopDiscoveryTests(unittest.TestCase):
         self.assertEqual(calls, [["/usr/bin/dwm-desktop-update", "status"],
                                  ["/usr/bin/dwm-desktop-update", "check"]])
         self.assertEqual((result.identifier, result.pending, result.managed, result.update_available),
-                         ("dwm-titus", 1, 1, True))
+                         ("dwm-qud", 1, 1, True))
         self.assertEqual((result.items[0].current, result.items[0].available), ("a" * 40, "b" * 40))
 
     def test_interrupted_and_restart_preserve_guidance_without_check(self):
@@ -1065,7 +1065,7 @@ class DesktopDiscoveryTests(unittest.TestCase):
         self.assertIn("Restore retained backup", result.detail)
         self.assertIn("session", result.detail)
         self.assertEqual(result.restart, "session")
-        self.assertIn("guidance\tdwm-titus\trestart\tsession\n", self.api["render_snapshot"]([result]))
+        self.assertIn("guidance\tdwm-qud\trestart\tsession\n", self.api["render_snapshot"]([result]))
 
     def test_malformed_revision_timeout_and_missing_helper(self):
         record = self.status()

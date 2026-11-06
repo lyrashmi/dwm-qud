@@ -33,7 +33,7 @@ def pump(condition=lambda: False, timeout=1):
 with tempfile.TemporaryDirectory(prefix="desktop-progress-") as temporary, patch.dict(os.environ):
     base = Path(temporary)
     os.environ["XDG_STATE_HOME"] = str(base)
-    state = base / "dwm-titus/desktop-update"
+    state = base / "dwm-qud/desktop-update"
     state.mkdir(parents=True)
     value = dict(schema=1, state="starting", detail="Waiting for approval", percent=-1,
                  operation="a" * 32, authorization="begin", startedAt=time.time() - 65)

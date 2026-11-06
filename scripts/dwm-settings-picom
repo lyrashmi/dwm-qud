@@ -30,8 +30,8 @@ MAX_SIZE = 1024 * 1024
 MAX_IMPORT_FILES = 320
 MAX_IMPORT_BYTES = MAX_IMPORT_FILES * MAX_SIZE
 BACKENDS = ("auto", "xrender", "glx", "egl")
-BEGIN = "# dwm-titus opacity defaults begin"
-END = "# dwm-titus opacity defaults end"
+BEGIN = "# dwm-qud opacity defaults begin"
+END = "# dwm-qud opacity defaults end"
 
 
 class Error(Exception):
@@ -591,7 +591,7 @@ def stop(running):
 def private_dir():
     base = os.environ.get("XDG_STATE_HOME", "")
     root = Path(base) if base.startswith("/") else Path.home() / ".local/state"
-    path = root / "dwm-titus/picom"
+    path = root / "dwm-qud/picom"
     safe_target(path / "probe")
     path.mkdir(parents=True, exist_ok=True, mode=0o700)
     return path
@@ -878,7 +878,7 @@ def publish(path, text):
 
 def check_import_capacity(changes):
     """Bound recovery storage without deleting externally referenced copies."""
-    directory = config_home() / "picom/include/dwm-titus-import"
+    directory = config_home() / "picom/include/dwm-qud-import"
     additions = {
         path: text for path, text in changes.items() if path.parent == directory
     }
@@ -953,7 +953,7 @@ def mutate(action, args, revision):
                     destination
                     if p == config.path
                     else config_home()
-                    / "picom/include/dwm-titus-import"
+                    / "picom/include/dwm-qud-import"
                     / (
                         hashlib.sha256((str(p) + doc.text).encode()).hexdigest()
                         + ".conf"

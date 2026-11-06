@@ -8,11 +8,11 @@ BASH_BIN="${BASH:-/usr/bin/bash}"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
-mkdir -p "$work/bin" "$work/home/.config/dwm-titus"
+mkdir -p "$work/bin" "$work/home/.config/dwm-qud"
 export HOME="$work/home"
 export XDG_CONFIG_HOME="$HOME/.config"
 
-cat >"$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml" <<'EOF'
+cat >"$XDG_CONFIG_HOME/dwm-qud/hotkeys.toml" <<'EOF'
 [vars]
 terminal = "alacritty"
 EOF
@@ -69,7 +69,7 @@ SCRIPT
 chmod +x "$work/bin/custom-term"
 
 sed -i 's/terminal = "alacritty"/terminal = "custom-term"/' \
-	"$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml"
+	"$XDG_CONFIG_HOME/dwm-qud/hotkeys.toml"
 DWM_TERMINAL_TEST_OUT="$work/custom-general-out" \
 	PATH="$work/bin" \
 	"$BASH_BIN" "$HELPER" echo test
@@ -89,15 +89,15 @@ DWM_TERMINAL_TEST_OUT="$work/explicit-override-out" \
 grep -Fqx "$work/bin/custom-term" "$work/explicit-override-out"
 
 sed -i 's/terminal = "custom-term"/terminal = "alacritty"/' \
-	"$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml"
+	"$XDG_CONFIG_HOME/dwm-qud/hotkeys.toml"
 
 sed -i 's/terminal = "alacritty"/terminal = "kitty"/' \
-	"$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml"
+	"$XDG_CONFIG_HOME/dwm-qud/hotkeys.toml"
 DWM_TERMINAL_TEST_OUT="$work/configured-out" \
 	PATH="$work/bin" \
 	"$BASH_BIN" "$HELPER" --print-command >"$work/configured-command"
 sed -i 's/terminal = "kitty"/terminal = "dwmterm"/' \
-	"$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml"
+	"$XDG_CONFIG_HOME/dwm-qud/hotkeys.toml"
 cat >"$work/bin/dwmterm" <<'SCRIPT'
 #!/bin/sh
 printf '%s\n' "$0" >"$DWM_TERMINAL_TEST_OUT"
@@ -111,9 +111,9 @@ DWM_TERMINAL_TEST_OUT="$work/dwmterm-configured-out" \
 grep -Fqx dwmterm "$work/dwmterm-configured-command"
 rm -f "$work/bin/dwmterm"
 sed -i 's/terminal = "dwmterm"/terminal = "alacritty"/' \
-	"$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml"
+	"$XDG_CONFIG_HOME/dwm-qud/hotkeys.toml"
 
-cat >>"$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml" <<'EOF'
+cat >>"$XDG_CONFIG_HOME/dwm-qud/hotkeys.toml" <<'EOF'
 [malformed-section
 terminal = "kitty"
 EOF
@@ -183,7 +183,7 @@ DWM_TERMINAL_TEST_OUT="$work/custom-out" \
 grep -Fqx "custom" "$work/custom-out"
 
 printf '%s\n' '[vars]' 'terminal = not-quoted' \
-	>"$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml"
+	>"$XDG_CONFIG_HOME/dwm-qud/hotkeys.toml"
 DWM_TERMINAL_TEST_OUT="$work/malformed-out" \
 	PATH="$work/bin" \
 	"$BASH_BIN" "$HELPER"

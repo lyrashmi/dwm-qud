@@ -208,7 +208,7 @@ def migrate_hotkeys(path):
     if not key_arrays and not tag_arrays:
         raise ValueError("missing keys or tag_keys array")
     if any(v_bound(binding) for bindings in key_arrays + tag_arrays for binding in bindings):
-        print(f"dwm-titus: V binding exists in {path}; leaving it unchanged (custom MODKEY may apply); bind Clipboard history manually if wanted")
+        print(f"dwm-qud: V binding exists in {path}; leaving it unchanged (custom MODKEY may apply); bind Clipboard history manually if wanted")
         return False
     write_migrated(path, append_entries(path, "keys", original, [CLIPBOARD_KEYBIND],
                                        allow_missing=not key_arrays))
@@ -216,15 +216,15 @@ def migrate_hotkeys(path):
 
 
 MIGRATIONS = {
-    "window-rules.toml": (migrate_window_rules, "dwm-titus: added clipboard window rule to {path}"),
-    "hotkeys.toml": (migrate_hotkeys, "dwm-titus: added clipboard history keybinding to {path}"),
+    "window-rules.toml": (migrate_window_rules, "dwm-qud: added clipboard window rule to {path}"),
+    "hotkeys.toml": (migrate_hotkeys, "dwm-qud: added clipboard history keybinding to {path}"),
 }
 
 
 def default_path(name):
     configured = os.environ.get("XDG_CONFIG_HOME", "")
     config_home = Path(configured) if os.path.isabs(configured) else Path.home() / ".config"
-    return config_home / "dwm-titus" / name
+    return config_home / "dwm-qud" / name
 
 
 def main():

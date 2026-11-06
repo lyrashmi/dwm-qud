@@ -7,7 +7,7 @@ import subprocess
 import sys
 import time
 
-directory = Path(os.environ["XDG_STATE_HOME"]) / "dwm-titus/desktop-update"
+directory = Path(os.environ["XDG_STATE_HOME"]) / "dwm-qud/desktop-update"
 directory.mkdir(parents=True, exist_ok=True)
 path = directory / "status.json"
 value = {"schema": 1, "state": "unknown", "detail": "Check for desktop updates", "canUpdate": False,

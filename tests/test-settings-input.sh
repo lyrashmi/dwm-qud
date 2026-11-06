@@ -34,7 +34,7 @@ cleanup_test() {
 }
 
 trap cleanup_test EXIT
-mkdir -p "$work/bin" "$work/home/.config/dwm-titus" "$work/runtime"
+mkdir -p "$work/bin" "$work/home/.config/dwm-qud" "$work/runtime"
 chmod 700 "$work/runtime"
 
 cat >"$work/devices" <<'EOF'
@@ -422,14 +422,14 @@ grep -Fqx '0 0 0 1 0' "$work/xkbset.state"
 env "${env_common[@]}" "$helper" preview sticky-keep 5 accessx sticky-keys 1 >/dev/null
 env "${env_common[@]}" "$helper" keep sticky-keep >/dev/null
 grep -Fqx $'accessx\tsticky-keys\t1\t0' \
-	"$work/home/.config/dwm-titus/input-settings.conf"
+	"$work/home/.config/dwm-qud/input-settings.conf"
 printf '0 0 0 1 0\n' >"$work/xkbset.state"
 env "${env_common[@]}" "$helper" apply-saved
 grep -Fqx '0 1 0 1 0' "$work/xkbset.state"
 env "${env_common[@]}" "$helper" reset accessx sticky-keys >/dev/null
 grep -Fqx '0 0 0 1 0' "$work/xkbset.state"
-if [[ -f $work/home/.config/dwm-titus/input-settings.conf ]] &&
-	grep -Fq $'accessx\tsticky-keys\t' "$work/home/.config/dwm-titus/input-settings.conf"; then
+if [[ -f $work/home/.config/dwm-qud/input-settings.conf ]] &&
+	grep -Fq $'accessx\tsticky-keys\t' "$work/home/.config/dwm-qud/input-settings.conf"; then
 	printf 'sticky-keys reset left a persisted override\n' >&2
 	exit 1
 fi
@@ -541,8 +541,8 @@ fi
 env "${env_common[@]}" "$helper" preview nodeless-test 5 "$nodeless_key" pointer-speed 0.4 >/dev/null
 env "${env_common[@]}" "$helper" keep nodeless-test 2>"$work/nodeless-keep.err" >/dev/null
 grep -Fq 'session value only' "$work/nodeless-keep.err"
-if [[ -f $work/home/.config/dwm-titus/input-settings.conf ]] &&
-	grep -Fq "$nodeless_key" "$work/home/.config/dwm-titus/input-settings.conf"; then
+if [[ -f $work/home/.config/dwm-qud/input-settings.conf ]] &&
+	grep -Fq "$nodeless_key" "$work/home/.config/dwm-qud/input-settings.conf"; then
 	printf 'node-less input identity was persisted\n' >&2
 	exit 1
 fi
@@ -552,7 +552,7 @@ grep -Fqx 'preview	pointer-test	5' "$work/preview"
 env "${env_common[@]}" "$helper" keep pointer-test >"$work/keep"
 grep -Fqx 'result	keep	pointer-test' "$work/keep"
 grep -Fqx "$mouse_key"$'\tpointer-speed\t0.25\t0.000000' \
-	"$work/home/.config/dwm-titus/input-settings.conf"
+	"$work/home/.config/dwm-qud/input-settings.conf"
 
 env "${env_common[@]}" "$helper" apply-saved
 grep -Fq 'xinput set-prop 12 libinput Accel Speed 0.25' "$work/actions.log"
@@ -667,11 +667,11 @@ grep -Fq 'input preview failed' "$work/apply-failure.err"
 test ! -e "$work/runtime/dwm-settings-input/apply-failure.state"
 test ! -e "$work/runtime/dwm-settings-input/current"
 
-cp "$work/home/.config/dwm-titus/input-settings.conf" "$work/saved-connected"
+cp "$work/home/.config/dwm-qud/input-settings.conf" "$work/saved-connected"
 {
 	printf '0000000000000000\tpointer-speed\t0.75\n'
 	cat "$work/saved-connected"
-} >"$work/home/.config/dwm-titus/input-settings.conf"
+} >"$work/home/.config/dwm-qud/input-settings.conf"
 rm -f "$work/actions.log"
 env "${env_common[@]}" "$helper" apply-saved 2>"$work/apply-disconnected.err"
 if ! grep -Fq 'skipped unavailable 0000000000000000/pointer-speed' "$work/apply-disconnected.err"; then
@@ -757,7 +757,7 @@ env "${env_common[@]}" TEST_UNSTABLE=1 "$helper" preview unstable-test 5 \
 env "${env_common[@]}" TEST_UNSTABLE=1 "$helper" keep unstable-test \
 	2>"$work/unstable-keep.err" >/dev/null
 grep -Fq 'session value only' "$work/unstable-keep.err"
-if grep -Fq "$unstable_mouse_key" "$work/home/.config/dwm-titus/input-settings.conf"; then
+if grep -Fq "$unstable_mouse_key" "$work/home/.config/dwm-qud/input-settings.conf"; then
 	printf 'unstable input identity was persisted\n' >&2
 	exit 1
 fi
@@ -794,7 +794,7 @@ for _ in {1..30}; do
 done
 env "${env_common[@]}" "$helper" keep keep-disconnected >/dev/null
 grep -Fqx "$mouse_key"$'\tpointer-speed\t0.6\t0.000000' \
-	"$work/home/.config/dwm-titus/input-settings.conf"
+	"$work/home/.config/dwm-qud/input-settings.conf"
 test ! -e "$work/runtime/dwm-settings-input/keep-disconnected.state"
 cp "$work/devices-all" "$work/devices"
 rm -f "$work/actions.log"
@@ -808,10 +808,10 @@ env "${env_common[@]}" TEST_OPTIONS= "$helper" preview empty-options 5 \
 	"$keyboard_key" modifier-options ctrl:nocaps >/dev/null
 env "${env_common[@]}" "$helper" keep empty-options >/dev/null
 grep -Fqx "$keyboard_key"$'\tmodifier-options\tctrl:nocaps\t' \
-	"$work/home/.config/dwm-titus/input-settings.conf"
+	"$work/home/.config/dwm-qud/input-settings.conf"
 env "${env_common[@]}" "$helper" reset "$keyboard_key" modifier-options >/dev/null
 printf '%s\tmodifier-options\t\t\n' "$keyboard_key" \
-	>>"$work/home/.config/dwm-titus/input-settings.conf"
+	>>"$work/home/.config/dwm-qud/input-settings.conf"
 rm -f "$work/actions.log"
 env "${env_common[@]}" "$helper" apply-saved
 grep -Fq 'setxkbmap -device 13 -option  -option ' "$work/actions.log"
@@ -822,7 +822,7 @@ env "${env_common[@]}" "$helper" keep keyboard-reset >/dev/null
 env "${env_common[@]}" "$helper" reset "$keyboard_key" keyboard-layout >/dev/null
 grep -Fq 'setxkbmap -device 13 -layout de' "$work/actions.log"
 if grep -Fq "$keyboard_key"$'\tkeyboard-layout\t' \
-	"$work/home/.config/dwm-titus/input-settings.conf"; then
+	"$work/home/.config/dwm-qud/input-settings.conf"; then
 	printf 'keyboard reset left a persisted layout override\n' >&2
 	exit 1
 fi
@@ -858,7 +858,7 @@ env "${env_common[@]}" TEST_DEVICES="$work/devices-shared" "$helper" preview twi
 grep -Fqx 'xinput set-prop 17 libinput Natural Scrolling Enabled 1' "$work/actions.log"
 grep -Fqx 'xinput set-prop 18 libinput Natural Scrolling Enabled 1' "$work/actions.log"
 env "${env_common[@]}" TEST_DEVICES="$work/devices-shared" "$helper" keep twin-scroll >/dev/null
-grep -Fqx "$twin_key"$'\tnatural-scroll\t1\t0' "$work/home/.config/dwm-titus/input-settings.conf"
+grep -Fqx "$twin_key"$'\tnatural-scroll\t1\t0' "$work/home/.config/dwm-qud/input-settings.conf"
 rm -f "$work/actions.log"
 env "${env_common[@]}" TEST_DEVICES="$work/devices-shared" "$helper" preview twin-speed 5 \
 	"$twin_key" pointer-speed 0.5 >/dev/null
@@ -873,7 +873,7 @@ rm -f "$work/actions.log"
 env "${env_common[@]}" TEST_DEVICES="$work/devices-shared" "$helper" apply-saved
 grep -Fqx 'xinput set-prop 17 libinput Natural Scrolling Enabled 1' "$work/actions.log"
 grep -Fqx 'xinput set-prop 18 libinput Natural Scrolling Enabled 1' "$work/actions.log"
-rm -f "$work/home/.config/dwm-titus/input-settings.conf"
+rm -f "$work/home/.config/dwm-qud/input-settings.conf"
 
 # A direct pointer reset exits cleanly after restoring the driver default.
 env "${env_common[@]}" TEST_DEVICES="$work/devices-shared" "$helper" reset "$twin_key" pointer-speed \
@@ -941,14 +941,14 @@ fi
 grep -Fq 'use Revert' "$work/twin-keep.err"
 [[ $(tail -1 "$work/actions.log") == 'xinput set-prop 17 libinput Natural Scrolling Enabled 0' ]]
 test -f "$work/runtime/dwm-settings-input/twin-keep.state"
-if grep -Fq "$twin_key"$'\tnatural-scroll' "$work/home/.config/dwm-titus/input-settings.conf" 2>/dev/null; then
+if grep -Fq "$twin_key"$'\tnatural-scroll' "$work/home/.config/dwm-qud/input-settings.conf" 2>/dev/null; then
 	printf 'Keep saved a value one part rejected\n' >&2
 	exit 1
 fi
 rm -f "$work/actions.log"
 env "${env_common[@]}" TEST_DEVICES="$work/devices-shared" "$helper" keep twin-keep >/dev/null
 [[ $(cat "$work/actions.log") == $'xinput set-prop 17 libinput Natural Scrolling Enabled 1\nxinput set-prop 18 libinput Natural Scrolling Enabled 1' ]]
-grep -Fqx "$twin_key"$'\tnatural-scroll\t1\t0' "$work/home/.config/dwm-titus/input-settings.conf"
+grep -Fqx "$twin_key"$'\tnatural-scroll\t1\t0' "$work/home/.config/dwm-qud/input-settings.conf"
 test ! -e "$work/runtime/dwm-settings-input/twin-keep.state"
 
 # Keep after a failed preview and a replug: the parts have new ids and still
@@ -961,7 +961,7 @@ grep -Fq $'preview-failed\ttwin-replug' "$work/twin-replug.out"
 rm -f "$work/actions.log"
 env "${env_common[@]}" TEST_DEVICES="$work/devices-shared-replug" "$helper" keep twin-replug >/dev/null
 [[ $(cat "$work/actions.log") == $'xinput set-prop 27 libinput Natural Scrolling Enabled 1\nxinput set-prop 28 libinput Natural Scrolling Enabled 1' ]]
-grep -Fqx "$twin_key"$'\tnatural-scroll\t1\t0' "$work/home/.config/dwm-titus/input-settings.conf"
+grep -Fqx "$twin_key"$'\tnatural-scroll\t1\t0' "$work/home/.config/dwm-qud/input-settings.conf"
 
 # Saved values are applied to all parts or none: a part that fails puts the
 # earlier parts back.
@@ -979,11 +979,11 @@ env "${env_common[@]}" TEST_DEVICES="$work/devices-shared" TEST_FAIL_SET_FROM=2 
 	TEST_SET_COUNTER="$work/set.count" "$helper" apply-saved 2>"$work/twin-replay-stuck.err" || true
 grep -Fq "$twin_key/natural-scroll reached only some parts and could not be undone" \
 	"$work/twin-replay-stuck.err"
-rm -f "$work/home/.config/dwm-titus/input-settings.conf"
+rm -f "$work/home/.config/dwm-qud/input-settings.conf"
 
 # A Reset that fails on a later part puts the earlier parts back and keeps
 # the saved value.
-printf '%s\tnatural-scroll\t1\t0\n' "$twin_key" >"$work/home/.config/dwm-titus/input-settings.conf"
+printf '%s\tnatural-scroll\t1\t0\n' "$twin_key" >"$work/home/.config/dwm-qud/input-settings.conf"
 rm -f "$work/actions.log"
 if env "${env_common[@]}" TEST_DEVICES="$work/devices-shared" TEST_DEFAULT_17=1 TEST_FAIL_SET_ID=18 \
 	"$helper" reset "$twin_key" natural-scroll >/dev/null 2>"$work/twin-reset-fail.err"; then
@@ -992,11 +992,11 @@ if env "${env_common[@]}" TEST_DEVICES="$work/devices-shared" TEST_DEFAULT_17=1 
 fi
 [[ $(cat "$work/actions.log") == $'xinput set-prop 17 libinput Natural Scrolling Enabled 1\nxinput set-prop 17 libinput Natural Scrolling Enabled 0' ]]
 grep -Fq 'rejected the natural-scroll reset; the parts already reset were put back' "$work/twin-reset-fail.err"
-grep -Fqx "$twin_key"$'\tnatural-scroll\t1\t0' "$work/home/.config/dwm-titus/input-settings.conf"
-rm -f "$work/home/.config/dwm-titus/input-settings.conf"
+grep -Fqx "$twin_key"$'\tnatural-scroll\t1\t0' "$work/home/.config/dwm-qud/input-settings.conf"
+rm -f "$work/home/.config/dwm-qud/input-settings.conf"
 
 # The same, but putting back the first part fails too: Reset says so.
-printf '%s\tnatural-scroll\t1\t0\n' "$twin_key" >"$work/home/.config/dwm-titus/input-settings.conf"
+printf '%s\tnatural-scroll\t1\t0\n' "$twin_key" >"$work/home/.config/dwm-qud/input-settings.conf"
 rm -f "$work/set.count"
 if env "${env_common[@]}" TEST_DEVICES="$work/devices-shared" TEST_DEFAULT_17=1 TEST_FAIL_SET_FROM=2 \
 	TEST_SET_COUNTER="$work/set.count" "$helper" reset "$twin_key" natural-scroll \
@@ -1005,8 +1005,8 @@ if env "${env_common[@]}" TEST_DEVICES="$work/devices-shared" TEST_DEFAULT_17=1 
 	exit 1
 fi
 grep -Fq 'could not be put back' "$work/twin-reset-stuck.err"
-grep -Fqx "$twin_key"$'\tnatural-scroll\t1\t0' "$work/home/.config/dwm-titus/input-settings.conf"
-rm -f "$work/home/.config/dwm-titus/input-settings.conf"
+grep -Fqx "$twin_key"$'\tnatural-scroll\t1\t0' "$work/home/.config/dwm-qud/input-settings.conf"
+rm -f "$work/home/.config/dwm-qud/input-settings.conf"
 
 # A part that disappears during a preview is skipped on Revert; the part that
 # is left gets its own value back, not the first part's.
@@ -1085,8 +1085,8 @@ test ! -s "$work/actions.log"
 test ! -e "$work/runtime/dwm-settings-input/capture-query-failed.state"
 
 # Reset/replay must pre-read all members and preserve the saved override.
-printf '%s\tnatural-scroll\t1\t0\n' "$twin_key" >"$work/home/.config/dwm-titus/input-settings.conf"
-cp "$work/home/.config/dwm-titus/input-settings.conf" "$work/saved-before-query"
+printf '%s\tnatural-scroll\t1\t0\n' "$twin_key" >"$work/home/.config/dwm-qud/input-settings.conf"
+cp "$work/home/.config/dwm-qud/input-settings.conf" "$work/saved-before-query"
 for action in reset apply-saved; do
 	rm -f "$work/actions.log" "$work/list-props.count"
 	if [[ $action == reset ]]; then
@@ -1098,7 +1098,7 @@ for action in reset apply-saved; do
 		env "${env_common[@]}" TEST_DEVICES="$work/devices-shared" TEST_DISAPPEAR_ID=18 "$helper" apply-saved >/dev/null 2>"$work/replay-query.err"
 	fi
 	test ! -s "$work/actions.log"
-	cmp "$work/saved-before-query" "$work/home/.config/dwm-titus/input-settings.conf"
+	cmp "$work/saved-before-query" "$work/home/.config/dwm-qud/input-settings.conf"
 done
 
 # Unreadable unrelated pointers must not block a healthy grouped target.

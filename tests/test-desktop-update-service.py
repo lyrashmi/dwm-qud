@@ -86,7 +86,7 @@ update.launch("b" * 40)
         assert (base / "finished").exists(), "Worker did not survive its initiating process"
         assert json.loads((base / "build-env").read_text()) == build_env, "Build overrides were lost in the service handoff"
         assert (base / "proxy-env").read_text() == env["HTTPS_PROXY"]
-        assert not list((base / "dwm-titus/desktop-update/operations").glob("*/environment.json"))
+        assert not list((base / "dwm-qud/desktop-update/operations").glob("*/environment.json"))
         assert not (base / "worker-preloaded").exists(), "Loader code executed before the worker"
         assert all(value is None for value in json.loads((base / "unsafe-env").read_text()).values()), "Startup variables survived sanitization"
         print("Worker service rejects loader and interpreter environment injection: PASS")

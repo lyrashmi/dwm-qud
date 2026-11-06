@@ -92,8 +92,8 @@ runtime=$runtime_storage
 config_home=$home/.config
 data_home=$home/.local/share
 bin=$work/bin
-mkdir -p "$config_home/quickshell" "$config_home/dwm-titus" "$home/.cache" \
-	"$data_home/dwm-titus/scripts" "$data_home/applications" "$runtime" "$bin"
+mkdir -p "$config_home/quickshell" "$config_home/dwm-qud" "$home/.cache" \
+	"$data_home/dwm-qud/scripts" "$data_home/applications" "$runtime" "$bin"
 chmod 700 "$runtime_storage"
 if [ "${#runtime}" -gt 64 ]; then
 	runtime_alias_dir=$(mktemp -d /tmp/dwm-large-surface-runtime.XXXXXX)
@@ -110,20 +110,20 @@ text = path.read_text()
 text = text.replace('ShellRoot {', 'ShellRoot {\n    IpcHandler {\n        target: "titletest"\n        function observed(): bool {\n            return dwmState.activeWindowTitle.length === 16383\n                && /^W+$/.test(dwmState.activeWindowTitle);\n        }\n    }', 1)
 path.write_text(text)
 PYQML
-cp "$repo/tests/fixtures/system-operation-provider.py" "$data_home/dwm-titus/scripts/dwm-system-management"
-chmod +x "$data_home/dwm-titus/scripts/dwm-system-management"
-cp "$repo/config/"*.toml "$config_home/dwm-titus/"
+cp "$repo/tests/fixtures/system-operation-provider.py" "$data_home/dwm-qud/scripts/dwm-system-management"
+chmod +x "$data_home/dwm-qud/scripts/dwm-system-management"
+cp "$repo/config/"*.toml "$config_home/dwm-qud/"
 cp "$repo/scripts/dwm-settings-provider" "$repo/scripts/dwm-system-health" \
 	"$repo/scripts/dwm-settings-display" "$repo/scripts/dwm-settings-input" \
 	"$repo/scripts/dwm-display-setup" "$repo/scripts/dwm-quickshell-controlcenter" \
 	"$repo/scripts/dwm-quickshell-controls" "$repo/scripts/dwm-quickshell-network" \
 	"$repo/scripts/dwm-quickshell-launcher" "$repo/scripts/dwm-diagnostics" \
 	"$repo/scripts/dwm-packages.sh" "$repo/scripts/dwm-quickshell-state" \
-	"$repo/scripts/dwm-lock" "$data_home/dwm-titus/scripts/"
+	"$repo/scripts/dwm-lock" "$data_home/dwm-qud/scripts/"
 
 # Fail if the isolated health backend silently loses dependency diagnostics.
 HOME=$home XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_home XDG_RUNTIME_DIR=$runtime \
-	"$data_home/dwm-titus/scripts/dwm-system-health" scan-user >"$work/dependencies.tsv"
+	"$data_home/dwm-qud/scripts/dwm-system-health" scan-user >"$work/dependencies.tsv"
 for package in gnome-keyring gnome-keyring-pam; do
 	grep -F "$(printf '\tdependency-package-%s\t' "$package")" "$work/dependencies.tsv" >/dev/null
 done
@@ -164,7 +164,7 @@ dwm_pid=$!
 env DISPLAY="$display" HOME="$home" XDG_CONFIG_HOME="$config_home" \
 	XDG_DATA_HOME="$data_home" XDG_CACHE_HOME="$home/.cache" XDG_RUNTIME_DIR="$runtime" \
 	QSG_RHI_BACKEND=software QT_QUICK_BACKEND=software \
-	DWM_LARGE_SURFACE_DEX_LOG="$work/dex.log" PATH="$bin:$data_home/dwm-titus/scripts:$PATH" \
+	DWM_LARGE_SURFACE_DEX_LOG="$work/dex.log" PATH="$bin:$data_home/dwm-qud/scripts:$PATH" \
 	quickshell --no-duplicate >"$work/quickshell.log" 2>&1 &
 quickshell_pid=$!
 config=$config_home/quickshell/shell.qml
@@ -379,9 +379,9 @@ if [ "$popup_timeout" != 4000 ]; then
 	exit 1
 fi
 if ! grep -Eq '"popupTimeoutMs"[[:space:]]*:[[:space:]]*4000' \
-	"$config_home/dwm-titus/notification-settings.json"; then
+	"$config_home/dwm-qud/notification-settings.json"; then
 	printf 'Notification popup timeout was not persisted:\n' >&2
-	sed -n '1,20p' "$config_home/dwm-titus/notification-settings.json" >&2
+	sed -n '1,20p' "$config_home/dwm-qud/notification-settings.json" >&2
 	exit 1
 fi
 # FileView does not define whether saved or fileChanged arrives first. Sample a
@@ -421,7 +421,7 @@ while [ "$i" -lt 100 ]; do
 	sleep 0.05
 done
 [ "$(ipc notifications doNotDisturb)" = true ]
-chmod 500 "$config_home/dwm-titus"
+chmod 500 "$config_home/dwm-qud"
 ipc notifications setDoNotDisturb false >/dev/null
 i=0
 while [ "$i" -lt 100 ]; do
@@ -432,7 +432,7 @@ done
 [ "$(ipc notifications policyState)" = unavailable ]
 [ "$(ipc notifications doNotDisturb)" = true ]
 [ "$(ipc notifications popupTimeout)" = 4000 ]
-chmod 700 "$config_home/dwm-titus"
+chmod 700 "$config_home/dwm-qud"
 ipc notifications resetPolicy >/dev/null
 i=0
 while [ "$i" -lt 100 ]; do
@@ -461,8 +461,8 @@ done
 [ "$(ipc notifications policyState)" = available ]
 [ "$(ipc notifications doNotDisturb)" = true ]
 [ "$(ipc notifications popupTimeout)" = 4000 ]
-chmod 000 "$config_home/dwm-titus/notification-settings.json"
-touch "$config_home/dwm-titus/notification-settings.json"
+chmod 000 "$config_home/dwm-qud/notification-settings.json"
+touch "$config_home/dwm-qud/notification-settings.json"
 i=0
 while [ "$i" -lt 100 ]; do
 	[ "$(ipc notifications policyState)" = unavailable ] && break
@@ -476,8 +476,8 @@ send_test_notification normal 'Suppressed during policy read failure'
 sleep 0.1
 [ "$(ipc notifications count)" = 0 ]
 [ "$(ipc notifications historyLatestSummary)" = 'Suppressed during policy read failure' ]
-chmod 600 "$config_home/dwm-titus/notification-settings.json"
-touch "$config_home/dwm-titus/notification-settings.json"
+chmod 600 "$config_home/dwm-qud/notification-settings.json"
+touch "$config_home/dwm-qud/notification-settings.json"
 i=0
 while [ "$i" -lt 100 ]; do
 	[ "$(ipc notifications policyState)" = available ] && break
@@ -495,7 +495,7 @@ done
 [ "$(ipc notifications doNotDisturb)" = false ]
 [ "$(ipc notifications popupTimeout)" = 6000 ]
 printf '%s\n' '{"version":1,"doNotDisturb":true,"popupTimeoutMs":6000}' \
-	>"$config_home/dwm-titus/notification-settings.json"
+	>"$config_home/dwm-qud/notification-settings.json"
 i=0
 while [ "$i" -lt 100 ]; do
 	policy_dnd=$(ipc notifications doNotDisturb)
@@ -506,7 +506,7 @@ done
 [ "$policy_dnd" = true ]
 [ "$(ipc notifications count)" = 0 ]
 [ "$(ipc notifications historyCount)" -gt 0 ]
-printf '%s\n' '{malformed' >"$config_home/dwm-titus/notification-settings.json"
+printf '%s\n' '{malformed' >"$config_home/dwm-qud/notification-settings.json"
 i=0
 while [ "$i" -lt 100 ]; do
 	[ "$(ipc notifications policyState)" = partial ] && break
@@ -577,8 +577,8 @@ fi
 # Opening the surface must not opt in or import the current clipboard.
 [ "$(ipc clipboard count)" -eq 0 ]
 [ "$(ipc clipboard persistence)" = false ]
-[ ! -e "$home/.cache/dwm-titus/clipboard-history.json" ]
-[ ! -e "$home/.cache/dwm-titus/clipboard-history-v2.json" ]
+[ ! -e "$home/.cache/dwm-qud/clipboard-history.json" ]
+[ ! -e "$home/.cache/dwm-qud/clipboard-history-v2.json" ]
 DISPLAY=$display xdotool windowactivate --sync "$clipboard_window"
 DISPLAY=$display xdotool key Escape
 i=0

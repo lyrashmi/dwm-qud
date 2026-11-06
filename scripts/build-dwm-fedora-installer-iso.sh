@@ -5,8 +5,8 @@ usage() {
 	cat <<'EOF'
 Usage: scripts/build-dwm-fedora-installer-iso.sh --input ISO --output ISO [--variant standard|nvidia] [--version X.Y.Z] [--system-image ROOTFS.tar.zst|ROOTFS.tar.xz]
 
-Embed this checkout and a dwm-titus Kickstart into a Fedora installer ISO.
-The resulting ISO exposes the checkout at /run/install/repo/dwm-titus.
+Embed this checkout and a dwm-qud Kickstart into a Fedora installer ISO.
+The resulting ISO exposes the checkout at /run/install/repo/dwm-qud.
 --system-image selects offline installation from a factory-built root filesystem
 and its required adjacent .json manifest. The manifest must match --variant.
 EOF
@@ -147,7 +147,7 @@ fi
 work_dir="$(mktemp -d)"
 tmp_output=
 trap 'rm -rf "$work_dir"; [[ -z $tmp_output ]] || rm -f "$tmp_output"' EXIT
-payload_dir="$work_dir/dwm-titus"
+payload_dir="$work_dir/dwm-qud"
 system_image_args=()
 if [[ -n $system_image ]]; then
 	image_sha=$(
@@ -289,7 +289,7 @@ xorriso -indev "$input_iso" -outdev "$tmp_output" \
 	-boot_image any replay \
 	-map "$ks_file" /dwm-fedora.ks \
 	"${grub_xorriso_args[@]}" \
-	-map "$payload_dir" /dwm-titus \
+	-map "$payload_dir" /dwm-qud \
 	"${extra_xorriso_args[@]}" \
 	"${system_image_args[@]}"
 

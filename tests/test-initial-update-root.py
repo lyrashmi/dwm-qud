@@ -9,11 +9,11 @@ import tempfile
 assert os.geteuid() == 0 and Path("/.dockerenv").exists()
 assert os.environ.get("DWM_DISPOSABLE_DNF_TEST") == "1"
 repo = Path(__file__).resolve().parents[1]
-helper = Path("/usr/local/libexec/dwm-titus/dwm-initial-update-root")
+helper = Path("/usr/local/libexec/dwm-qud/dwm-initial-update-root")
 helper.parent.mkdir(parents=True, exist_ok=True)
 helper.write_text((repo / "scripts/dwm-initial-update-root").read_text().replace("@PREFIX@", "/usr/local"))
 helper.chmod(0o755)
-state = Path("/var/lib/dwm-titus/initial-update")
+state = Path("/var/lib/dwm-qud/initial-update")
 state.mkdir(parents=True, exist_ok=True)
 marker = state / "complete.json"
 marker.unlink(missing_ok=True)

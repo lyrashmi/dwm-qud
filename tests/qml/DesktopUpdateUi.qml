@@ -29,7 +29,7 @@ ShellRoot {
     }
 
     FileView {
-        path: root.stage > 0 ? Quickshell.env("XDG_STATE_HOME") + "/dwm-titus/desktop-update/progress-opened" : ""
+        path: root.stage > 0 ? Quickshell.env("XDG_STATE_HOME") + "/dwm-qud/desktop-update/progress-opened" : ""
         watchChanges: true
         printErrors: false
         onLoaded: root.progressOpened = text().trim() === "opened"

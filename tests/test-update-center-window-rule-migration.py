@@ -66,7 +66,7 @@ rules = [
     def test_relative_xdg_config_uses_home_fallback(self):
         with tempfile.TemporaryDirectory() as directory:
             home = Path(directory)
-            config = home / ".config/dwm-titus/window-rules.toml"
+            config = home / ".config/dwm-qud/window-rules.toml"
             config.parent.mkdir(parents=True)
             config.write_text("rules = []\n")
             subprocess.run([sys.executable, str(MIGRATOR)], check=True, capture_output=True,

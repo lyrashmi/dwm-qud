@@ -66,7 +66,7 @@ def log_tail(state, value):
 class ProgressApp(Gtk.Application):
     def __init__(self):
         super().__init__(application_id="io.github.christitustech.DwmDesktopUpdate", flags=Gio.ApplicationFlags.FLAGS_NONE)
-        self.state = Path(os.environ.get("XDG_STATE_HOME", str(Path.home() / ".local/state"))) / "dwm-titus/desktop-update"
+        self.state = Path(os.environ.get("XDG_STATE_HOME", str(Path.home() / ".local/state"))) / "dwm-qud/desktop-update"
         self.value = {}
         self.window = None
         self.operation = ""

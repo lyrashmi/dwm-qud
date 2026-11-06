@@ -101,7 +101,7 @@ static void delay_write(int fd) {
     ssize_t n = readlink(proc, path, sizeof path - 1);
     if (n <= 0) return;
     path[n] = 0;
-    if (!strstr(path, "/.cache/dwm-titus/")) return;
+    if (!strstr(path, "/.cache/dwm-qud/")) return;
     int input = open(proc, O_RDONLY);
     if (input < 0) return;
     n = pread(input, data, sizeof data - 1, 0);
@@ -133,8 +133,8 @@ int fdatasync(int fd) {
                     preload_source, '-ldl', '-o', preload], check=True)
     entered = work / 'write-entered'
     release = work / 'write-release'
-    config = home / '.config/dwm-titus'
-    cache = home / '.cache/dwm-titus'
+    config = home / '.config/dwm-qud'
+    cache = home / '.cache/dwm-qud'
     config.mkdir(parents=True)
     cache.mkdir(parents=True)
     settings = config / 'clipboard-settings.json'

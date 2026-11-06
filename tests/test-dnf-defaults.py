@@ -16,7 +16,7 @@ sys.dont_write_bytecode = True
 
 REPO = Path(__file__).resolve().parents[1]
 HELPER = REPO / "scripts/dwm-dnf-defaults"
-SOURCE = REPO / "config/dnf/40-dwm-titus.conf"
+SOURCE = REPO / "config/dnf/40-dwm-qud.conf"
 loader = importlib.machinery.SourceFileLoader("dnf_defaults", str(HELPER))
 spec = importlib.util.spec_from_loader(loader.name, loader)
 module = importlib.util.module_from_spec(spec)
@@ -28,10 +28,10 @@ class DefaultsTests(unittest.TestCase):
         self.workspace = tempfile.TemporaryDirectory(prefix="dnf-defaults-")
         self.addCleanup(self.workspace.cleanup)
         self.root = Path(self.workspace.name) / "staged root"
-        self.target = self.root / "usr/share/dnf5/libdnf.conf.d/40-dwm-titus.conf"
-        self.record = self.root / "var/lib/dwm-titus/dnf-defaults/sha256"
+        self.target = self.root / "usr/share/dnf5/libdnf.conf.d/40-dwm-qud.conf"
+        self.record = self.root / "var/lib/dwm-qud/dnf-defaults/sha256"
         self.target.parent.mkdir(parents=True)
-        self.helper = self.root / "usr/local/libexec/dwm-titus/dwm-dnf-defaults"
+        self.helper = self.root / "usr/local/libexec/dwm-qud/dwm-dnf-defaults"
         self.helper.parent.mkdir(parents=True)
         self.helper.write_text(HELPER.read_text().replace("@PREFIX@", "/usr/local"))
         self.helper.chmod(0o755)

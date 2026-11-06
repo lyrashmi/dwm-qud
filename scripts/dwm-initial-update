@@ -8,9 +8,9 @@ import subprocess
 import sys
 import threading
 
-PENDING = Path("/var/lib/dwm-titus/initial-update/pending.json")
-COMPLETE = Path("/var/lib/dwm-titus/initial-update/complete.json")
-HELPER = Path(__file__).resolve().parents[1] / "libexec/dwm-titus/dwm-initial-update-root"
+PENDING = Path("/var/lib/dwm-qud/initial-update/pending.json")
+COMPLETE = Path("/var/lib/dwm-qud/initial-update/complete.json")
+HELPER = Path(__file__).resolve().parents[1] / "libexec/dwm-qud/dwm-initial-update-root"
 
 
 def pending():

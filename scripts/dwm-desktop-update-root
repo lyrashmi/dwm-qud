@@ -20,7 +20,7 @@ import tarfile
 import tempfile
 
 PREFIX = Path("@PREFIX@")
-STATE = Path("/var/lib/dwm-titus/desktop-updates")
+STATE = Path("/var/lib/dwm-qud/desktop-updates")
 LIMIT = 256 * 1024 * 1024
 SESSION_SECONDS = 3600
 SESSION_REQUEST_LIMIT = 8192
@@ -140,7 +140,7 @@ def restore(backup, journal):
             sync_directory(path.parent)
         else:
             replace(path, backup / entry["blob"], entry["old"])
-    replace(PREFIX / "share/dwm-titus/desktop-install.json", backup / "manifest.json",
+    replace(PREFIX / "share/dwm-qud/desktop-install.json", backup / "manifest.json",
             fingerprint(backup / "manifest.json"))
     journal["state"] = "rolled-back-pending"
     write_json(backup / "journal.json", journal)
@@ -155,7 +155,7 @@ def managed_destination(name, installed):
         return True
     layout = installed["layout"]
     prefix = Path(layout["prefix"])
-    if path.parent in (prefix / "bin", prefix / "libexec/dwm-titus"):
+    if path.parent in (prefix / "bin", prefix / "libexec/dwm-qud"):
         return re.fullmatch(r"dwm-[A-Za-z0-9_.-]+", path.name) is not None
     data = Path(layout.get("datadir", "/usr/share"))
     try:
@@ -167,7 +167,7 @@ def managed_destination(name, installed):
             or (len(parts) >= 3 and parts[0] == "icons" and re.fullmatch(r"Capitaine-Cursors[A-Za-z0-9_-]*", parts[1]) is not None)
             or (len(parts) == 3 and parts[0] in ("qt5ct", "qt6ct") and parts[1] == "colors"
                 and re.fullmatch(r"Dwm-[A-Za-z0-9_-]+\.conf", parts[2]) is not None)
-            or (len(parts) >= 3 and parts[:2] == ("licenses", "dwm-titus")))
+            or (len(parts) >= 3 and parts[:2] == ("licenses", "dwm-qud")))
 
 
 def trusted_parent(path, create=False):
@@ -293,7 +293,7 @@ def validate_candidate(candidate, installed):
 
 
 def apply_archive(archive, expected, operation, uid, bundle_digest, revision):
-    manifest_path = PREFIX / "share/dwm-titus/desktop-install.json"
+    manifest_path = PREFIX / "share/dwm-qud/desktop-install.json"
     installed = read_json(manifest_path)
     if hashlib.sha256(manifest_path.read_bytes()).hexdigest() != expected:
         fail("Installed desktop changed after preview; check again")
@@ -421,7 +421,7 @@ def main():
     os.umask(0o022)
     uid = caller_uid()
     if (os.geteuid() != 0 or uid is None
-            or Path(__file__).absolute() != PREFIX / "libexec/dwm-titus/dwm-desktop-update-root"):
+            or Path(__file__).absolute() != PREFIX / "libexec/dwm-qud/dwm-desktop-update-root"):
         fail("Use the installed desktop updater through polkit or sudo")
     trusted(Path(__file__).absolute())
     if not os.access(__file__, os.X_OK):
@@ -450,7 +450,7 @@ def perform(args, uid):
             signal.signal(signum, lambda *_: fail("Desktop installation interrupted"))
         if (args[0] == "begin" and len(args) == 3 and re.fullmatch(r"[0-9a-f]{64}", args[1])
                 and re.fullmatch(r"[0-9a-f]{32}", args[2])):
-            manifest_path = PREFIX / "share/dwm-titus/desktop-install.json"
+            manifest_path = PREFIX / "share/dwm-qud/desktop-install.json"
             if hashlib.sha256(manifest_path.read_bytes()).hexdigest() != args[1]:
                 fail("Installed desktop changed after preview; check again")
             for journal_path in STATE.glob("*/journal.json"):
@@ -504,7 +504,7 @@ def perform(args, uid):
             expected = {journal["afterManifest"]}
             if journal["state"] in ("applying", "rolling-back"):
                 expected.add(hashlib.sha256((backup / "manifest.json").read_bytes()).hexdigest())
-            if hashlib.sha256((PREFIX / "share/dwm-titus/desktop-install.json").read_bytes()).hexdigest() not in expected:
+            if hashlib.sha256((PREFIX / "share/dwm-qud/desktop-install.json").read_bytes()).hexdigest() not in expected:
                 fail("A newer installation superseded this recovery copy")
             restore(backup, journal)
         elif args[0] == "complete" and len(args) == 2 and re.fullmatch(r"[0-9a-f]{32}", args[1]):
@@ -527,7 +527,7 @@ def perform(args, uid):
                 fail("Invalid desktop operation")
             backup = STATE / args[2]
             journal = read_json(backup / "journal.json")
-            manifest_path = PREFIX / "share/dwm-titus/desktop-install.json"
+            manifest_path = PREFIX / "share/dwm-qud/desktop-install.json"
             if (journal.get("state") != "preparing" or journal.get("uid") != uid
                     or journal.get("generation") != args[1]
                     or hashlib.sha256(manifest_path.read_bytes()).hexdigest() != args[1]):
@@ -543,7 +543,7 @@ def perform(args, uid):
                 journal = read_json(journal_path)
                 if not isinstance(journal, dict) or journal.get("state") not in ("complete", "rolled-back"):
                     fail("Another desktop transaction must finish or recover first")
-            manifest_path = PREFIX / "share/dwm-titus/desktop-install.json"
+            manifest_path = PREFIX / "share/dwm-qud/desktop-install.json"
             manifest = read_json(manifest_path)
             if hashlib.sha256(manifest_path.read_bytes()).hexdigest() != args[1]:
                 fail("Dependency preview changed; check again")

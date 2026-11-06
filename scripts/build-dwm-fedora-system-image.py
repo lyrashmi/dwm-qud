@@ -63,8 +63,8 @@ def main():
                                  'image-desktop', capture_output=True, text=True).stdout
             ks = ks.replace('%packages\n', '%packages\n' + boot_packages, 1)
             ks += ('\n%post --interpreter=/bin/bash --erroronfail\nset -euo pipefail\nexec > /dev/ttyS0 2>&1\n'
-                   f"printf '%s\\n' '{args.variant}' > /etc/dwm-titus-factory-target\n"
-                   'bash /home/imagebuilder/.local/share/dwm-titus/scripts/image/prepare-factory.sh --factory-target\n%end\n')
+                   f"printf '%s\\n' '{args.variant}' > /etc/dwm-qud-factory-target\n"
+                   'bash /home/imagebuilder/.local/share/dwm-qud/scripts/image/prepare-factory.sh --factory-target\n%end\n')
             (work / 'factory.ks').write_text(ks)
             run('ksvalidator', work / 'factory.ks', stdout=log, stderr=subprocess.STDOUT)
             run('xorriso', '-indev', work / 'network.iso', '-outdev', work / 'factory.iso',
@@ -88,7 +88,7 @@ def main():
             with (evidence / 'factory-console.log').open('w') as console:
                 run(*command, stdout=console, stderr=subprocess.STDOUT, timeout=args.timeout)
             marker = run('guestfish', '--ro', '-a', work / 'factory.qcow2', '-i', 'cat',
-                         '/etc/dwm-titus-image', env=env, capture_output=True, text=True).stdout
+                         '/etc/dwm-qud-image', env=env, capture_output=True, text=True).stdout
             if f'variant={args.variant}\n' not in marker:
                 raise RuntimeError('Factory did not finish preparation')
             run('guestfish', '-a', work / 'factory.qcow2', '-i',

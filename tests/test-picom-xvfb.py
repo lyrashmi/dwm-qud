@@ -340,7 +340,7 @@ def main():
             # Use the actual managed-path QML model and controls, with IPC for assertions.
             qml = config / "quickshell"
             shutil.copytree(repo / "config/quickshell", qml)
-            scripts = data / "dwm-titus/scripts"
+            scripts = data / "dwm-qud/scripts"
             scripts.mkdir(parents=True)
             shutil.copy2(repo / "scripts/dwm-settings-picom", scripts)
             (qml / "shell.qml").write_text("""import QtQuick
@@ -558,7 +558,7 @@ ShellRoot {
             for path in (
                 work / "xvfb.log",
                 work / "qml.log",
-                work / "state/dwm-titus/picom/session.log",
+                work / "state/dwm-qud/picom/session.log",
             ):
                 if path.exists():
                     print(path.name + ":\n" + path.read_text()[-6000:])

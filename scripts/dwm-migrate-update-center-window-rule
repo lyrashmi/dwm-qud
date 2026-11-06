@@ -140,7 +140,7 @@ def main():
     else:
         configured = os.environ.get("XDG_CONFIG_HOME", "")
         config_home = Path(configured) if os.path.isabs(configured) else Path.home() / ".config"
-        path = config_home / "dwm-titus" / "window-rules.toml"
+        path = config_home / "dwm-qud" / "window-rules.toml"
     if not path.exists():
         return 0
     try:
@@ -149,7 +149,7 @@ def main():
         print(f"dwm-migrate-update-center-window-rule: {error}", file=sys.stderr)
         return 1
     if changed:
-        print(f"dwm-titus: added Update Center window rule to {path}")
+        print(f"dwm-qud: added Update Center window rule to {path}")
     return 0
 
 

@@ -1,9 +1,9 @@
 #!/bin/bash
 # Offline Anaconda %post: system packages and assets are already in the image.
 set -euo pipefail
-[[ ${1:-} == --installer-target && -f /etc/dwm-titus-image ]]
+[[ ${1:-} == --installer-target && -f /etc/dwm-qud-image ]]
 [[ $(id -u) == 0 ]]
-source_dir=/usr/share/dwm-titus-image
+source_dir=/usr/share/dwm-qud-image
 mapfile -t users < <(awk -F: '$3 >= 1000 && $3 < 60000 && $6 ~ "^/home/" && $7 !~ /(nologin|false)$/ {print $1}' /etc/passwd)
 ((${#users[@]} > 0)) || {
 	echo 'Create a regular user in Anaconda.' >&2
@@ -12,7 +12,7 @@ mapfile -t users < <(awk -F: '$3 >= 1000 && $3 < 60000 && $6 ~ "^/home/" && $7 !
 for user in "${users[@]}"; do
 	home=$(getent passwd "$user" | cut -d: -f6)
 	[[ $home == /home/* && ! -L $home ]]
-	target="$home/.local/share/dwm-titus"
+	target="$home/.local/share/dwm-qud"
 	for directory in "$home/.local" "$home/.local/share"; do
 		[[ ! -L $directory && (! -e $directory || -d $directory) ]] || {
 			printf 'Unsafe user data directory: %s\n' "$directory" >&2
@@ -31,7 +31,7 @@ for user in "${users[@]}"; do
 		PATH=/usr/local/bin:/usr/bin:/bin LANG=C.UTF-8 \
 		dbus-run-session -- bash -ec '
 export DBUS_SYSTEM_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS
-cd "$HOME/.local/share/dwm-titus"
+cd "$HOME/.local/share/dwm-qud"
 make install-user
 # Legacy xz captures predate these tools and seeders. Keep their installation
 # path usable; package/default upgrades require rebuilding the factory image.

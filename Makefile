@@ -10,13 +10,13 @@ USER_HOME ?= $(shell getent passwd "${OWNER}" 2>/dev/null | cut -d: -f6)
 XDG_CONFIG_HOME ?= ${USER_HOME}/.config
 XDG_DATA_HOME ?= ${USER_HOME}/.local/share
 XDG_STATE_HOME ?= ${USER_HOME}/.local/state
-DATA_DIR  := ${XDG_DATA_HOME}/dwm-titus
+DATA_DIR  := ${XDG_DATA_HOME}/dwm-qud
 CFG_DIR   := ${XDG_CONFIG_HOME}
 DATADIR   ?= ${PREFIX}/share
 SYSTEMDUSERDIR ?= ${PREFIX}/lib/systemd/user
 CAPITAINE_DARK_THEME = Capitaine-Cursors
 CAPITAINE_LIGHT_THEME = Capitaine-Cursors-White
-CAPITAINE_LICENSE_DIR = ${DATADIR}/licenses/dwm-titus/capitaine-cursors
+CAPITAINE_LICENSE_DIR = ${DATADIR}/licenses/dwm-qud/capitaine-cursors
 run_managed_test = if [ -n "$${DWM_TEST_WORKSPACE:-}" ] && [ -n "$${DWM_TEST_RUNNER_TOKEN:-}" ] && [ "$${TMPDIR:-}" = "$${DWM_TEST_WORKSPACE}" ] && [ -f "$${DWM_TEST_WORKSPACE}/.runner" ] && [ ! -L "$${DWM_TEST_WORKSPACE}/.runner" ] && [ "$$(cat "$${DWM_TEST_WORKSPACE}/.runner" 2>/dev/null)" = "$${DWM_TEST_RUNNER_TOKEN}" ]; then $(1); else scripts/run-tests $(1); fi
 
 SRC = drw.c dwm.c util.c tomlparser.c
@@ -56,7 +56,7 @@ INSTALL_COMMANDS = dwm-clipboard-observer \
 	scripts/dwm-system-management \
 	scripts/dwm-polkit \
 	scripts/dwm-packages.sh \
-	scripts/dwm-titus-release \
+	scripts/dwm-qud-release \
 	scripts/dwm-screenshot \
 	scripts/dwm-settings \
 	scripts/dwm-settings-display \
@@ -91,9 +91,9 @@ INSTALL_COMMANDS = dwm-clipboard-observer \
 	scripts/xscreensaver-setup.sh
 INSTALL_COMMAND_NAMES = $(notdir ${INSTALL_COMMANDS})
 PRIVILEGED_HELPERS = scripts/dwm-dnf-defaults scripts/dwm-settings-display-root scripts/dwm-desktop-update-root scripts/dwm-initial-update-root
-PRIVILEGED_HELPER_DIR = ${PREFIX}/libexec/dwm-titus
+PRIVILEGED_HELPER_DIR = ${PREFIX}/libexec/dwm-qud
 
-RELEASE_NAME = dwm-titus-${VERSION}
+RELEASE_NAME = dwm-qud-${VERSION}
 RELEASE_ARCHIVE = release/${RELEASE_NAME}.tar.gz
 SOURCE_DATE_EPOCH ?= $(shell git log -1 --format=%ct 2>/dev/null || printf '0')
 
@@ -160,7 +160,7 @@ install:
 		$(MAKE) all; \
 	fi
 	/usr/bin/python3 -I scripts/dwm-desktop-update guard-system-install --destdir "${DESTDIR}" \
-		--owner "${OWNER}" --user-state "${XDG_STATE_HOME}/dwm-titus/desktop-update" -- $(MAKE) install-files
+		--owner "${OWNER}" --user-state "${XDG_STATE_HOME}/dwm-qud/desktop-update" -- $(MAKE) install-files
 
 install-files:
 	$(MAKE) install-system-files
@@ -227,7 +227,7 @@ install-system-files:
 		sed "s|@PREFIX@|${PREFIX}|g" "$$f" | \
 			install -Dm755 /dev/stdin "${DESTDIR}${PRIVILEGED_HELPER_DIR}/$$(basename "$$f")"; \
 	done
-	install -d -m755 "${DESTDIR}${PREFIX}/share/dwm-titus"
+	install -d -m755 "${DESTDIR}${PREFIX}/share/dwm-qud"
 	/usr/bin/python3 -I "${DESTDIR}${PREFIX}/bin/dwm-desktop-update" record-system --source-dir . \
 		--destdir "${DESTDIR}" --prefix "${PREFIX}" --manprefix "${MANPREFIX}" \
 		--xsessions "${XSESSIONSDIR}" --datadir "${DATADIR}" \
@@ -272,7 +272,7 @@ install-cursors:
 		"${DESTDIR}${CAPITAINE_LICENSE_DIR}/COPYING"
 
 install-user:
-	/usr/bin/python3 -I scripts/dwm-desktop-update guard-user-install "${XDG_STATE_HOME}/dwm-titus/desktop-update" -- $(MAKE) install-user-files
+	/usr/bin/python3 -I scripts/dwm-desktop-update guard-user-install "${XDG_STATE_HOME}/dwm-qud/desktop-update" -- $(MAKE) install-user-files
 
 install-user-files:
 	@test -n "${USER_HOME}" || { echo "USER_HOME could not be determined." >&2; exit 1; }
@@ -336,10 +336,10 @@ install-user-files:
 	mkdir -p "${CFG_DIR}/quickshell"
 	cp -aL --no-preserve=ownership config/quickshell/. "${CFG_DIR}/quickshell"/
 	@echo "==> Seeding user config (skipping existing files)..."
-	mkdir -p ${CFG_DIR}/dwm-titus
-	test -f ${CFG_DIR}/dwm-titus/hotkeys.toml || install -Dm644 config/hotkeys.toml ${CFG_DIR}/dwm-titus/hotkeys.toml
-	test -f ${CFG_DIR}/dwm-titus/themes.toml  || install -Dm644 config/themes.toml  ${CFG_DIR}/dwm-titus/themes.toml
-	test -f ${CFG_DIR}/dwm-titus/window-rules.toml || install -Dm644 config/window-rules.toml ${CFG_DIR}/dwm-titus/window-rules.toml
+	mkdir -p ${CFG_DIR}/dwm-qud
+	test -f ${CFG_DIR}/dwm-qud/hotkeys.toml || install -Dm644 config/hotkeys.toml ${CFG_DIR}/dwm-qud/hotkeys.toml
+	test -f ${CFG_DIR}/dwm-qud/themes.toml  || install -Dm644 config/themes.toml  ${CFG_DIR}/dwm-qud/themes.toml
+	test -f ${CFG_DIR}/dwm-qud/window-rules.toml || install -Dm644 config/window-rules.toml ${CFG_DIR}/dwm-qud/window-rules.toml
 	@echo "==> Migrating Update Center window rule..."
 	HOME="${USER_HOME}" XDG_CONFIG_HOME="${XDG_CONFIG_HOME}" \
 		scripts/dwm-migrate-update-center-window-rule || \
@@ -413,7 +413,7 @@ uninstall-files:
 	rm -f "${DESTDIR}${PRIVILEGED_HELPER_DIR}/dwm-desktop-update-root"
 	rm -f "${DESTDIR}${PRIVILEGED_HELPER_DIR}/dwm-initial-update-root"
 	rm -f "${DESTDIR}${PRIVILEGED_HELPER_DIR}/dwm-dnf-defaults"
-	rm -f "${DESTDIR}${PREFIX}/share/dwm-titus/desktop-install.json"
+	rm -f "${DESTDIR}${PREFIX}/share/dwm-qud/desktop-install.json"
 
 release: all
 	@work="$$(mktemp -d)"; \
@@ -698,11 +698,11 @@ check-install-manifest: all
 		printf '%s\n' \
 			pre-existing \
 			usr/bin/dwm \
-			usr/libexec/dwm-titus/dwm-settings-display-root \
-			usr/libexec/dwm-titus/dwm-desktop-update-root \
-			usr/libexec/dwm-titus/dwm-initial-update-root \
-			usr/libexec/dwm-titus/dwm-dnf-defaults \
-			usr/share/dwm-titus/desktop-install.json \
+			usr/libexec/dwm-qud/dwm-settings-display-root \
+			usr/libexec/dwm-qud/dwm-desktop-update-root \
+			usr/libexec/dwm-qud/dwm-initial-update-root \
+			usr/libexec/dwm-qud/dwm-dnf-defaults \
+			usr/share/dwm-qud/desktop-install.json \
 			usr/share/man/man1/dwm.1 \
 			usr/share/xsessions/dwm.desktop; \
 		for name in ${INSTALL_COMMAND_NAMES}; do \
@@ -724,14 +724,14 @@ check-install-manifest: all
 			\( -type f -o -type l \) \
 			-printf 'usr/share/icons/Qud-Icons/%P\n'; \
 		printf '%s\n' \
-			usr/share/licenses/dwm-titus/capitaine-cursors/COPYING; \
+			usr/share/licenses/dwm-qud/capitaine-cursors/COPYING; \
 	} | sort > "$$expected"; \
 	find "$$stage" \( -type f -o -type l \) -printf '%P\n' | sort > "$$actual"; \
 	cmp "$$expected" "$$actual"; \
 	for name in dwm ${INSTALL_COMMAND_NAMES}; do \
 		test -x "$$stage/usr/bin/$$name"; \
 	done; \
-	test -x "$$stage/usr/libexec/dwm-titus/dwm-settings-display-root"; \
+	test -x "$$stage/usr/libexec/dwm-qud/dwm-settings-display-root"; \
 	grep -Fqx 'Exec=/usr/bin/dwm' \
 		"$$stage/usr/share/xsessions/dwm.desktop"; \
 	test -f "$$stage/usr/share/icons/${CAPITAINE_DARK_THEME}/cursors/default"; \

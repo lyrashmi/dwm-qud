@@ -265,17 +265,17 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
-mkdir -p "$work/bin" "$home/.config/dwm-titus" "$home/.local/share/dwm-titus/config"
+mkdir -p "$work/bin" "$home/.config/dwm-qud" "$home/.local/share/dwm-qud/config"
 # Keep dwm config warnings away from the caller's notification daemon.
 printf '#!/bin/sh\nexit 0\n' >"$work/bin/notify-send"
 chmod 755 "$work/bin/notify-send"
-cp "$repo_dir/config/"*.toml "$home/.local/share/dwm-titus/config/"
-cp "$repo_dir/config/themes.toml" "$repo_dir/config/window-rules.toml" "$home/.config/dwm-titus/"
+cp "$repo_dir/config/"*.toml "$home/.local/share/dwm-qud/config/"
+cp "$repo_dir/config/themes.toml" "$repo_dir/config/window-rules.toml" "$home/.config/dwm-qud/"
 printf '%s\n' \
 	'keys = [' \
 	'  { mod="SUPER", key="k", desc="Next keyboard layout", func="cyclelayout", i=1 },' \
 	'  { mod="SUPER SHIFT", key="k", desc="Previous keyboard layout", func="cyclelayout", i=-1 },' \
-	']' >"$home/.config/dwm-titus/hotkeys.toml"
+	']' >"$home/.config/dwm-qud/hotkeys.toml"
 
 # -displayfd lets the server pick a free display number itself.
 exec 3>"$work/displayfd"
@@ -701,11 +701,11 @@ wait_loaded() { # $1 = reloads seen before, prints the keybind count
 grep -q '^  # { mod="SUPER ALT", *key="k", .*func="cyclelayout"' "$repo_dir/config/hotkeys.toml" ||
 	fail "cyclelayout example missing from config/hotkeys.toml"
 seen=$(loaded_count)
-cp "$repo_dir/config/hotkeys.toml" "$home/.config/dwm-titus/hotkeys.toml"
+cp "$repo_dir/config/hotkeys.toml" "$home/.config/dwm-qud/hotkeys.toml"
 shipped=$(wait_loaded "$seen")
 seen=$(loaded_count)
 sed 's/^  # \({ mod="SUPER ALT", *key="k", .*func="cyclelayout"\)/  \1/' \
-	"$repo_dir/config/hotkeys.toml" >"$home/.config/dwm-titus/hotkeys.toml"
+	"$repo_dir/config/hotkeys.toml" >"$home/.config/dwm-qud/hotkeys.toml"
 uncommented=$(wait_loaded "$seen")
 [ "$uncommented" -eq $((shipped + 1)) ] ||
 	fail "uncommented example: $shipped -> $uncommented keybinds"

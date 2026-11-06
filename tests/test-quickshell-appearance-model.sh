@@ -225,7 +225,7 @@ if printf '%s\n' "$application_state" | grep -Fq 'personalizationMutationState';
 fi
 grep -Fq 'root.personalizationActionKind === "delegate")' "$model"
 grep -Fq 'if (!root.settingsVisible) return;' "$model"
-grep -Fq 'root.configHome + "/dwm-titus/personalization.conf"' "$model"
+grep -Fq 'root.configHome + "/dwm-qud/personalization.conf"' "$model"
 grep -Fq 'root.personalizationMutationState !== "available"' "$model"
 grep -Fq 'action === "apply" && !root.personalizationApplyReady(capability)' "$model"
 grep -Fq 'action === "reset" && !root.personalizationResetReady(capability)' "$model"

@@ -32,7 +32,7 @@ class Security(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory(prefix="desktop-security-", dir="/opt")
         self.addCleanup(self.temporary.cleanup)
         self.prefix = Path(self.temporary.name)
-        self.helper = self.prefix / "libexec/dwm-titus/dwm-desktop-update-root"
+        self.helper = self.prefix / "libexec/dwm-qud/dwm-desktop-update-root"
         self.helper.parent.mkdir(parents=True)
         self.helper.write_text((REPO / "scripts/dwm-desktop-update-root").read_text().replace("@PREFIX@", str(self.prefix)))
         self.helper.chmod(0o755)
@@ -40,15 +40,15 @@ class Security(unittest.TestCase):
         self.binary.parent.mkdir()
         self.binary.write_bytes(b"original")
         self.binary.chmod(0o755)
-        self.manifest_path = self.prefix / "share/dwm-titus/desktop-install.json"
+        self.manifest_path = self.prefix / "share/dwm-qud/desktop-install.json"
         self.manifest_path.parent.mkdir(parents=True)
-        self.manifest = {"schema": 1, "source": "https://github.com/ChrisTitusTech/dwm-titus.git",
+        self.manifest = {"schema": 1, "source": "https://github.com/ChrisTitusTech/dwm-qud.git",
                          "revision": "a" * 40, "layout": {"prefix": str(self.prefix)}, "packages": ["gcc"],
                          "files": {str(self.binary): {"mode": 0o755, "sha256": hashlib.sha256(b"updated").hexdigest()}}}
         self.manifest_path.write_text(json.dumps(self.manifest, sort_keys=True) + "\n")
         self.operation = uuid.uuid4().hex
         self.bundle = self.prefix / "candidate.tar"
-        self.addCleanup(shutil.rmtree, Path("/var/lib/dwm-titus/desktop-updates") / self.operation, True)
+        self.addCleanup(shutil.rmtree, Path("/var/lib/dwm-qud/desktop-updates") / self.operation, True)
 
     def archive(self, mutation=None, payload=b"updated"):
         candidate = copy.deepcopy(self.manifest)
@@ -191,7 +191,7 @@ class Security(unittest.TestCase):
                 self.assertEqual(self.added.lstat().st_ino, before.st_ino)
                 self.assertEqual(self.binary.read_bytes(), b"original")
                 self.added.unlink()
-                shutil.rmtree(Path("/var/lib/dwm-titus/desktop-updates") / self.operation)
+                shutil.rmtree(Path("/var/lib/dwm-qud/desktop-updates") / self.operation)
 
     def test_omitted_helper_changed_after_validation_is_preserved(self):
         self.helper_collision_archive()
@@ -264,7 +264,7 @@ class Security(unittest.TestCase):
         begun = subprocess.run([str(self.helper), "begin", generation, self.operation],
                                capture_output=True, text=True, env={**environment, "SUDO_UID": "1000"})
         self.assertEqual(begun.returncode, 0, begun.stderr)
-        journal = Path("/var/lib/dwm-titus/desktop-updates") / self.operation / "journal.json"
+        journal = Path("/var/lib/dwm-qud/desktop-updates") / self.operation / "journal.json"
         self.assertEqual(json.loads(journal.read_text())["uid"], 1000)
         for uid in (None, "0", "bad", "1001"):
             env = environment if uid is None else {**environment, "SUDO_UID": uid}
@@ -310,7 +310,7 @@ class Security(unittest.TestCase):
         # Exercise the real backend's downstream commands with the same poison.
         worker.write_text((REPO / "scripts/dwm-desktop-update").read_text())
         home = self.prefix / "desktop-home"
-        status = home / "state/dwm-titus/desktop-update/status.json"
+        status = home / "state/dwm-qud/desktop-update/status.json"
         status.parent.mkdir(parents=True)
         initial = runpy.run_path(str(REPO / "scripts/dwm-desktop-update"))["status_default"]()
         status.write_text(json.dumps({**initial, "state": "starting", "operation": "f" * 32}))
@@ -342,7 +342,7 @@ class Security(unittest.TestCase):
         guard = functions["guard_system_install"]
         probe = self.prefix / "lock-probe.py"
         probe.write_text("""import fcntl
-with open('/var/lib/dwm-titus/desktop-updates/lock', 'a') as lock:
+with open('/var/lib/dwm-qud/desktop-updates/lock', 'a') as lock:
     try:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
@@ -350,7 +350,7 @@ with open('/var/lib/dwm-titus/desktop-updates/lock', 'a') as lock:
 raise SystemExit(1)
 """)
         self.assertEqual(guard("", ["/usr/bin/python3", str(probe)]), 17)
-        with Path("/var/lib/dwm-titus/desktop-updates/lock").open("a") as lock:
+        with Path("/var/lib/dwm-qud/desktop-updates/lock").open("a") as lock:
             import fcntl
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             with self.assertRaisesRegex(RuntimeError, "active"):
@@ -378,7 +378,7 @@ raise SystemExit(17)
 """)
         guard = runpy.run_path(str(REPO / "scripts/dwm-desktop-update"))["guard_system_install"]
         self.assertEqual(guard("", ["/usr/bin/python3", str(probe), str(state / "lock"),
-                                    "/var/lib/dwm-titus/desktop-updates/lock"], "nobody", str(state)), 17)
+                                    "/var/lib/dwm-qud/desktop-updates/lock"], "nobody", str(state)), 17)
         self.assertEqual(state.stat().st_uid, account.pw_uid)
         self.assertEqual((state / "lock").stat().st_uid, account.pw_uid)
         self.assertEqual(os.geteuid(), 0)
@@ -588,7 +588,7 @@ raise SystemExit(17)
         injected = "\ndef observed_package_command(args, **kwargs):\n    path = Path(" + repr(str(marker)) + ")\n    calls = json.loads(path.read_text()) if path.exists() else []\n    calls.append(args)\n    path.write_text(json.dumps(calls))\n    return subprocess.CompletedProcess(args, 1 if args[0] == '/usr/bin/rpm' else 0)\nsubprocess.run = observed_package_command\n"
         self.helper.write_text(self.helper.read_text().replace('if __name__ == "__main__":', injected + '\nif __name__ == "__main__":'))
         generation = hashlib.sha256(self.manifest_path.read_bytes()).hexdigest()
-        directory = Path("/var/lib/dwm-titus/desktop-updates") / self.operation
+        directory = Path("/var/lib/dwm-qud/desktop-updates") / self.operation
         self.assertEqual(self.command("begin", generation, self.operation).returncode, 0)
         for state in ("preparing", "applying", "applied", "rolling-back", "rolled-back-pending", "invalid"):
             (directory / "journal.json").write_text(json.dumps({"state": state, "uid": 1000}))
@@ -621,7 +621,7 @@ raise SystemExit(17)
     def test_live_uninstall_refuses_unfinished_transactions(self):
         generation = hashlib.sha256(self.manifest_path.read_bytes()).hexdigest()
         self.assertEqual(self.command("begin", generation, self.operation).returncode, 0)
-        journal = Path("/var/lib/dwm-titus/desktop-updates") / self.operation / "journal.json"
+        journal = Path("/var/lib/dwm-qud/desktop-updates") / self.operation / "journal.json"
         args = ["make", "uninstall", "PREFIX=" + str(self.prefix),
                 "XSESSIONSDIR=" + str(self.prefix / "share/xsessions")]
         for pending in ("preparing", "applying", "applied", "rolling-back", "rolled-back-pending"):
@@ -646,7 +646,7 @@ raise SystemExit(17)
         # Retry after cancellation before complete, including when a later operation starts.
         self.assertEqual(self.command("rollback", self.operation).returncode, 0)
         later = uuid.uuid4().hex
-        self.addCleanup(shutil.rmtree, Path("/var/lib/dwm-titus/desktop-updates") / later, True)
+        self.addCleanup(shutil.rmtree, Path("/var/lib/dwm-qud/desktop-updates") / later, True)
         self.assertEqual(self.command("begin", generation, later).returncode, 0)
         self.assertEqual(self.command("rollback", self.operation).returncode, 0)
         self.assertEqual(self.command("complete", self.operation).returncode, 0)
@@ -660,7 +660,7 @@ raise SystemExit(17)
         original = self.manifest_path.read_bytes()
         for padding in ("extra", "x" * (4 * 1024 * 1024)):
             self.operation = uuid.uuid4().hex
-            self.addCleanup(shutil.rmtree, Path("/var/lib/dwm-titus/desktop-updates") / self.operation, True)
+            self.addCleanup(shutil.rmtree, Path("/var/lib/dwm-qud/desktop-updates") / self.operation, True)
             self.archive(lambda value: value.update(padding=padding))
             self.assertNotEqual(self.apply().returncode, 0)
             self.assertEqual(self.manifest_path.read_bytes(), original)
@@ -683,7 +683,7 @@ raise SystemExit(17)
         self.assertEqual(self.apply().returncode, 0)
         first = self.operation
         self.operation = uuid.uuid4().hex
-        self.addCleanup(shutil.rmtree, Path("/var/lib/dwm-titus/desktop-updates") / self.operation, True)
+        self.addCleanup(shutil.rmtree, Path("/var/lib/dwm-qud/desktop-updates") / self.operation, True)
         os.chown(self.bundle, 1001, 1001)
         self.assertIn("requires rollback", self.apply(uid=1001).stderr)
         self.assertNotEqual(self.command("complete", first, uid=1001).returncode, 0)
@@ -788,9 +788,9 @@ raise SystemExit(17)
         result = subprocess.run([sys.executable, script, "verify-trust", str(self.manifest_path)], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         (self.prefix / ".desktop-source.json").write_text(json.dumps({"revision": "a" * 40}))
-        state = self.prefix / "state/dwm-titus/desktop-update"
+        state = self.prefix / "state/dwm-qud/desktop-update"
         state.mkdir(parents=True)
-        roots = [self.prefix / "config/quickshell", self.prefix / "data/dwm-titus/config", self.prefix / "data/dwm-titus/scripts"]
+        roots = [self.prefix / "config/quickshell", self.prefix / "data/dwm-qud/config", self.prefix / "data/dwm-qud/scripts"]
         fingerprints = runpy.run_path(script)["tree_manifest"]
         for root in roots:
             root.mkdir(parents=True)
@@ -896,7 +896,7 @@ raise SystemExit(17)
         for mode in (0o4755, 0o2755, 0o775, 0o755):
             with self.subTest(mode=oct(mode)):
                 self.operation = uuid.uuid4().hex
-                self.addCleanup(shutil.rmtree, Path("/var/lib/dwm-titus/desktop-updates") / self.operation, True)
+                self.addCleanup(shutil.rmtree, Path("/var/lib/dwm-qud/desktop-updates") / self.operation, True)
                 self.binary.write_bytes(b"untrusted original")
                 os.chown(self.binary, 1000, 1000)
                 self.binary.chmod(mode)
@@ -910,7 +910,7 @@ raise SystemExit(17)
     def test_old_recovery_record_with_special_mode_is_rejected(self):
         self.archive()
         self.assertEqual(self.apply().returncode, 0)
-        backup = Path("/var/lib/dwm-titus/desktop-updates") / self.operation
+        backup = Path("/var/lib/dwm-qud/desktop-updates") / self.operation
         journal = json.loads((backup / "journal.json").read_text())
         journal["replaced"][0]["old"]["mode"] = 0o4755
         (backup / "journal.json").write_text(json.dumps(journal))
@@ -990,7 +990,7 @@ raise SystemExit(17)
     def test_newer_manual_install_prevents_interrupted_rollback(self):
         self.archive()
         self.assertEqual(self.apply().returncode, 0)
-        journal_path = Path("/var/lib/dwm-titus/desktop-updates") / self.operation / "journal.json"
+        journal_path = Path("/var/lib/dwm-qud/desktop-updates") / self.operation / "journal.json"
         journal = json.loads(journal_path.read_text())
         value = json.loads(self.manifest_path.read_text())
         value["revision"] = "c" * 40
@@ -1031,7 +1031,7 @@ raise SystemExit(17)
     def test_interrupted_rollback_accepts_unpublished_manifest(self):
         self.archive()
         self.assertEqual(self.apply().returncode, 0)
-        backup = Path("/var/lib/dwm-titus/desktop-updates") / self.operation
+        backup = Path("/var/lib/dwm-qud/desktop-updates") / self.operation
         journal = json.loads((backup / "journal.json").read_text())
         journal["state"] = "applying"
         (backup / "journal.json").write_text(json.dumps(journal))
@@ -1103,7 +1103,7 @@ raise SystemExit(17)
         self.assertEqual(replies, [{"ok": True, "ready": True}, *[{"ok": True}] * 3])
         self.assertIn("System files installed and verified", result.stderr)
         self.assertEqual(self.binary.read_bytes(), b"updated")
-        journal = json.loads((Path("/var/lib/dwm-titus/desktop-updates") / self.operation / "journal.json").read_text())
+        journal = json.loads((Path("/var/lib/dwm-qud/desktop-updates") / self.operation / "journal.json").read_text())
         self.assertEqual(journal["state"], "complete")
 
     def test_session_rejects_other_operations_generations_and_revisions(self):
@@ -1125,7 +1125,7 @@ raise SystemExit(17)
         generation = hashlib.sha256(self.manifest_path.read_bytes()).hexdigest()
         result = self.session_command([["begin", generation, self.operation]])
         self.assertEqual(result.returncode, 0, result.stderr)
-        journal_path = Path("/var/lib/dwm-titus/desktop-updates") / self.operation / "journal.json"
+        journal_path = Path("/var/lib/dwm-qud/desktop-updates") / self.operation / "journal.json"
         self.assertEqual(json.loads(journal_path.read_text())["state"], "preparing")
         rejected = self.session_command([["begin", generation, self.operation]], mode="recover")
         self.assertNotEqual(rejected.returncode, 0)
@@ -1140,7 +1140,7 @@ raise SystemExit(17)
         result = self.session_command([["rollback", self.operation], ["complete", self.operation]], mode="recover", uid=1001)
         replies = [json.loads(line) for line in result.stdout.splitlines()]
         self.assertEqual([item["ok"] for item in replies], [True, False, False])
-        journal = json.loads((Path("/var/lib/dwm-titus/desktop-updates") / self.operation / "journal.json").read_text())
+        journal = json.loads((Path("/var/lib/dwm-qud/desktop-updates") / self.operation / "journal.json").read_text())
         self.assertEqual((journal["uid"], journal["state"]), (1000, "preparing"))
 
     def test_session_rejects_unbounded_and_malformed_requests(self):

@@ -127,7 +127,7 @@ def paths():
     config = os.environ.get("XDG_CONFIG_HOME", "")
     if not os.path.isabs(config):
         config = os.path.join(os.environ["HOME"], ".config")
-    runtime = os.environ.get("XDG_RUNTIME_DIR", f"/tmp/dwm-titus-{os.getuid()}")
+    runtime = os.environ.get("XDG_RUNTIME_DIR", f"/tmp/dwm-qud-{os.getuid()}")
     return config, runtime
 
 
@@ -139,7 +139,7 @@ def config_directory(config, create=False):
                 yield None
                 return
             # Validate config itself as well as the final managed directory.
-            with directory(os.path.join(config, "dwm-titus"), create) as fd:
+            with directory(os.path.join(config, "dwm-qud"), create) as fd:
                 yield fd
     except (OSError, Rejected) as error:
         if isinstance(error, Rejected) and str(error) != "unsafe directory":

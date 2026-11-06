@@ -170,7 +170,7 @@ test_root = Path(
 )
 test_root.mkdir(mode=0o700, parents=True, exist_ok=True)
 with tempfile.TemporaryDirectory(dir=test_root) as work:
-    config = Path(work) / "config/dwm-titus"
+    config = Path(work) / "config/dwm-qud"
     config.mkdir(parents=True)
     runtime = Path(work) / "runtime"
     runtime.mkdir(mode=0o700)

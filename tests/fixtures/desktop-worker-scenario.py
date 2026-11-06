@@ -20,7 +20,7 @@ config, data, state = base / "config", base / "data", base / "state"
 for path in (config / "quickshell", data / "config", data / "scripts", state):
     path.mkdir(parents=True, exist_ok=True)
     (path / "file").write_text("old")
-personal = config / "dwm-titus/themes.toml"
+personal = config / "dwm-qud/themes.toml"
 personal.parent.mkdir()
 personal.write_text("personal theme")
 (state / "build-config.h").write_text("personal build config")
@@ -29,7 +29,7 @@ binary = prefix / "bin/dwm"
 binary.parent.mkdir(parents=True)
 binary.write_text("new binary")
 binary.chmod(0o755)
-manifest_path = prefix / "share/dwm-titus/desktop-install.json"
+manifest_path = prefix / "share/dwm-qud/desktop-install.json"
 manifest = {"schema": 1, "source": update.SOURCE, "revision": "a" * 40, "packages": [],
             "layout": {"prefix": str(prefix), "manprefix": str(prefix / "share/man"),
                        "xsessions": str(prefix / "xsessions"), "datadir": str(prefix / "share")},

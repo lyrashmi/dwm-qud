@@ -8,8 +8,8 @@ repo_dir=$(
 
 config_home=${XDG_CONFIG_HOME:-${HOME:-}/.config}
 data_home=${XDG_DATA_HOME:-${HOME:-}/.local/share}
-dwm_config_dir=$config_home/dwm-titus
-managed_config_dir=$data_home/dwm-titus/config
+dwm_config_dir=$config_home/dwm-qud
+managed_config_dir=$data_home/dwm-qud/config
 
 config_file() {
 	name=$1
@@ -249,7 +249,7 @@ write_power_config() {
 		fi
 	else
 		if ! {
-			printf '%s\n' '# dwm-titus power settings'
+			printf '%s\n' '# dwm-qud power settings'
 			printf 'dpms_enabled=%s\n' "$power_dpms_enabled"
 			printf 'dpms_timeout=%s\n' "$power_dpms_timeout"
 			printf 'lock_enabled=%s\n' "$power_lock_enabled"
@@ -1647,7 +1647,7 @@ dependency_helper() {
 	)
 	# Source/data copies cannot discover a custom installation manifest.
 	if [ "$dependency_name" = dwm-desktop-update ] &&
-		[ ! -f "$dependency_dir/../share/dwm-titus/desktop-install.json" ]; then
+		[ ! -f "$dependency_dir/../share/dwm-qud/desktop-install.json" ]; then
 		if command -v "$dependency_name" 2>/dev/null; then
 			return 0
 		fi

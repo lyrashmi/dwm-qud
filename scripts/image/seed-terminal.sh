@@ -29,15 +29,15 @@ for fragment in "$HOME/.bashrc.d/"*; do
 		exit 0
 	fi
 done
-[[ -f $config_home/starship/starship.toml ]]
+[[ -f $config_home/starship.toml ]]
 cat >>"$bashrc" <<'BASH'
 
-# dwm-titus image: initialize the prompt only in interactive Bash sessions.
+# dwm-qud image: initialize the prompt only in interactive Bash sessions.
 case $- in
 *i*)
 	if command -v starship >/dev/null && ! declare -F starship_precmd >/dev/null; then
 		if [[ -z ${STARSHIP_CONFIG:-} && ! -e ${XDG_CONFIG_HOME:-$HOME/.config}/starship.toml ]]; then
-			export STARSHIP_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/starship/starship.toml"
+			export STARSHIP_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/starship.toml"
 		fi
 		eval "$(starship init bash)"
 	fi

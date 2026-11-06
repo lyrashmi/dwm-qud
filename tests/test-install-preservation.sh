@@ -210,7 +210,7 @@ grep -Fq 'dwm is stale. Run make before install-system.' \
 	"$WORK_DIR/stale-install.log"
 test ! -e "$WORK_DIR/stale-stage"
 mkdir -p \
-	"$XDG_CONFIG_HOME/dwm-titus" \
+	"$XDG_CONFIG_HOME/dwm-qud" \
 	"$XDG_CONFIG_HOME/picom" \
 	"$XDG_CONFIG_HOME/Thunar" \
 	"$XDG_CONFIG_HOME/quickshell" \
@@ -221,10 +221,10 @@ mkdir -p \
 
 printf '%s\n' '/* local config marker */' >"$TEST_REPO/config.h"
 printf '%s\n' '# existing xinitrc marker' >"$TEST_HOME/.xinitrc"
-printf '%s\n' '# existing hotkeys marker' >"$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml"
-cp "$TEST_REPO/config/themes.toml" "$XDG_CONFIG_HOME/dwm-titus/themes.toml"
-printf '%s\n' '# existing themes marker' >>"$XDG_CONFIG_HOME/dwm-titus/themes.toml"
-printf '%s\n' '# existing rules marker' >"$XDG_CONFIG_HOME/dwm-titus/window-rules.toml"
+printf '%s\n' '# existing hotkeys marker' >"$XDG_CONFIG_HOME/dwm-qud/hotkeys.toml"
+cp "$TEST_REPO/config/themes.toml" "$XDG_CONFIG_HOME/dwm-qud/themes.toml"
+printf '%s\n' '# existing themes marker' >>"$XDG_CONFIG_HOME/dwm-qud/themes.toml"
+printf '%s\n' '# existing rules marker' >"$XDG_CONFIG_HOME/dwm-qud/window-rules.toml"
 printf '%s\n' '# existing picom marker' >"$XDG_CONFIG_HOME/picom/picom.conf"
 printf '%s\n' '<!-- existing Thunar actions marker -->' >"$XDG_CONFIG_HOME/Thunar/uca.xml"
 printf '%s\n' '# unrelated user service marker' >"$XDG_CONFIG_HOME/systemd/user/custom.service"
@@ -293,9 +293,9 @@ assert_preserved() {
 
 snapshot_file "$TEST_REPO/config.h" "$WORK_DIR/config-h.before"
 snapshot_file "$TEST_HOME/.xinitrc" "$WORK_DIR/xinitrc.before"
-snapshot_file "$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml" "$WORK_DIR/hotkeys.before"
-snapshot_file "$XDG_CONFIG_HOME/dwm-titus/themes.toml" "$WORK_DIR/themes.before"
-snapshot_file "$XDG_CONFIG_HOME/dwm-titus/window-rules.toml" "$WORK_DIR/window-rules.before"
+snapshot_file "$XDG_CONFIG_HOME/dwm-qud/hotkeys.toml" "$WORK_DIR/hotkeys.before"
+snapshot_file "$XDG_CONFIG_HOME/dwm-qud/themes.toml" "$WORK_DIR/themes.before"
+snapshot_file "$XDG_CONFIG_HOME/dwm-qud/window-rules.toml" "$WORK_DIR/window-rules.before"
 snapshot_file "$XDG_CONFIG_HOME/picom/picom.conf" "$WORK_DIR/picom.before"
 snapshot_file "$XDG_CONFIG_HOME/Thunar/uca.xml" "$WORK_DIR/thunar-uca.before"
 snapshot_file "$XDG_CONFIG_HOME/autostart/picom.desktop" "$WORK_DIR/picom-autostart.before"
@@ -314,7 +314,7 @@ for _ in 1 2; do
 		XDG_DATA_HOME="$XDG_DATA_HOME" \
 		XDG_STATE_HOME="$XDG_STATE_HOME" \
 		XDG_CACHE_HOME="$XDG_CACHE_HOME"
-	[[ $(stat -c %a "$XDG_DATA_HOME/dwm-titus/scripts/image/check-packagekit.py") == "$(stat -c %a "$TEST_REPO/scripts/image/check-packagekit.py")" ]] || {
+	[[ $(stat -c %a "$XDG_DATA_HOME/dwm-qud/scripts/image/check-packagekit.py") == "$(stat -c %a "$TEST_REPO/scripts/image/check-packagekit.py")" ]] || {
 		printf 'Managed source file modes changed during installation.\n' >&2
 		exit 1
 	}
@@ -322,9 +322,9 @@ done
 
 assert_preserved config-h "$TEST_REPO/config.h" "$WORK_DIR/config-h.before"
 assert_preserved xinitrc "$TEST_HOME/.xinitrc" "$WORK_DIR/xinitrc.before"
-assert_preserved hotkeys "$XDG_CONFIG_HOME/dwm-titus/hotkeys.toml" "$WORK_DIR/hotkeys.before"
-assert_preserved themes "$XDG_CONFIG_HOME/dwm-titus/themes.toml" "$WORK_DIR/themes.before"
-assert_preserved window-rules "$XDG_CONFIG_HOME/dwm-titus/window-rules.toml" "$WORK_DIR/window-rules.before"
+assert_preserved hotkeys "$XDG_CONFIG_HOME/dwm-qud/hotkeys.toml" "$WORK_DIR/hotkeys.before"
+assert_preserved themes "$XDG_CONFIG_HOME/dwm-qud/themes.toml" "$WORK_DIR/themes.before"
+assert_preserved window-rules "$XDG_CONFIG_HOME/dwm-qud/window-rules.toml" "$WORK_DIR/window-rules.before"
 assert_preserved picom "$XDG_CONFIG_HOME/picom/picom.conf" "$WORK_DIR/picom.before"
 assert_preserved thunar-uca "$XDG_CONFIG_HOME/Thunar/uca.xml" \
 	"$WORK_DIR/thunar-uca.before"
@@ -402,8 +402,8 @@ run_as_owner env HOME="$FRESH_HOME" XDG_STATE_HOME="$FRESH_STATE_HOME" \
 	XDG_CACHE_HOME="$FRESH_CACHE_HOME"
 
 for fixture_state in "$XDG_STATE_HOME" "$FRESH_STATE_HOME"; do
-	test -f "$fixture_state/dwm-titus/desktop-update/installed.json"
-	test -f "$fixture_state/dwm-titus/desktop-update/build-config.h"
+	test -f "$fixture_state/dwm-qud/desktop-update/installed.json"
+	test -f "$fixture_state/dwm-qud/desktop-update/build-config.h"
 done
 
 if [[ $(grep -Fxc -- '-f' "$WORK_DIR/fc-cache.log") -ne 3 ]]; then
@@ -417,8 +417,8 @@ for user_path in \
 	"$FRESH_HOME/.local" \
 	"$FRESH_DATA_HOME" \
 	"$FRESH_CONFIG_HOME" \
-	"$FRESH_CONFIG_HOME/dwm-titus" \
-	"$FRESH_DATA_HOME/dwm-titus"; do
+	"$FRESH_CONFIG_HOME/dwm-qud" \
+	"$FRESH_DATA_HOME/dwm-qud"; do
 	test "$(stat -c %U "$user_path")" = "$OWNER"
 	test "$(stat -c %G "$user_path")" = "$OWNER_GROUP"
 done

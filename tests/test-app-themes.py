@@ -95,12 +95,12 @@ assert not errors, errors
 """, str(stage / 'usr/share/themes')], check=True)
     home = stage / 'home'
     config = home / '.config'
-    (config / 'dwm-titus').mkdir(parents=True)
+    (config / 'dwm-qud').mkdir(parents=True)
     (config / 'alacritty').mkdir()
     (config / 'kitty').mkdir()
     runtime = stage / 'runtime'
     runtime.mkdir(mode=0o700)
-    theme_file = config / 'dwm-titus/themes.toml'
+    theme_file = config / 'dwm-qud/themes.toml'
     # qt6ct is optional. Its executable is only discovered, never invoked,
     # while generating configuration; use a fixture to keep this deterministic.
     binary_dir = stage / 'bin'

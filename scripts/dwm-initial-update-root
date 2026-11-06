@@ -21,7 +21,7 @@ import xml.etree.ElementTree as ET
 ET.register_namespace("", "http://www.metalinker.org/")
 
 PREFIX = Path("@PREFIX@")
-STATE = Path("/var/lib/dwm-titus/initial-update")
+STATE = Path("/var/lib/dwm-qud/initial-update")
 PENDING = STATE / "pending.json"
 DNF = "/usr/bin/dnf5"
 LIMIT = 1024 * 1024
@@ -343,7 +343,7 @@ def main():
         return 0
     if os.geteuid() != 0 or not sys.stdin.isatty():
         raise RuntimeError("Run through dwm-initial-update in an interactive terminal.")
-    installed = PREFIX / "libexec/dwm-titus/dwm-initial-update-root"
+    installed = PREFIX / "libexec/dwm-qud/dwm-initial-update-root"
     if Path(__file__).resolve() != installed:
         raise RuntimeError("Only the installed root-owned helper may be elevated.")
     trusted(installed)

@@ -8,7 +8,7 @@ usage() {
 	cat <<'EOF'
 Usage: scripts/dev-sync-install.sh [--check]
 
-Build and synchronize the current checkout with the live dwm-titus install.
+Build and synchronize the current checkout with the live dwm-qud install.
 The default mode:
 
   1. Builds dwm from a clean object state.
@@ -88,13 +88,13 @@ data_root=${DATADIR:-$prefix/share}
 config_home=${XDG_CONFIG_HOME:-$user_home/.config}
 xdg_data_home=${XDG_DATA_HOME:-$user_home/.local/share}
 state_home=${XDG_STATE_HOME:-$user_home/.local/state}
-data_dir=$xdg_data_home/dwm-titus
+data_dir=$xdg_data_home/dwm-qud
 quickshell_dir=$config_home/quickshell
 binary_target=$prefix/bin/dwm
 man_target=$manprefix/man1/dwm.1
 xsession_target=$xsessions_dir/dwm.desktop
-display_root_helper_target=$prefix/libexec/dwm-titus/dwm-settings-display-root
-desktop_root_helper_target=$prefix/libexec/dwm-titus/dwm-desktop-update-root
+display_root_helper_target=$prefix/libexec/dwm-qud/dwm-settings-display-root
+desktop_root_helper_target=$prefix/libexec/dwm-qud/dwm-desktop-update-root
 make_command=${MAKE:-make}
 os_release_file=/etc/os-release
 if [ "${DWM_DEV_SYNC_TEST_MODE:-0}" = 1 ] &&
@@ -295,7 +295,7 @@ verify_install() {
 	fi
 	if [ "$verify_privileged_helper_trust" -eq 1 ]; then
 		if ! python3 "$repo_dir/scripts/dwm-desktop-update" verify-trust \
-			"$prefix/share/dwm-titus/desktop-install.json"; then
+			"$prefix/share/dwm-qud/desktop-install.json"; then
 			verification_failed=1
 		fi
 		for privileged_target in "$display_root_helper_target" "$desktop_root_helper_target"; do
@@ -337,11 +337,11 @@ verify_install() {
 		done
 	done
 	verify_file "$repo_dir/assets/cursors/COPYING" \
-		"$data_root/licenses/dwm-titus/capitaine-cursors/COPYING" \
+		"$data_root/licenses/dwm-qud/capitaine-cursors/COPYING" \
 		"cursor license"
 	if ! HOME="$user_home" XDG_CONFIG_HOME="$config_home" XDG_DATA_HOME="$xdg_data_home" \
 		XDG_STATE_HOME="$state_home" python3 "$repo_dir/scripts/dwm-desktop-update" \
-		verify-receipts "$repo_dir" "$prefix/share/dwm-titus/desktop-install.json"; then
+		verify-receipts "$repo_dir" "$prefix/share/dwm-qud/desktop-install.json"; then
 		verification_failed=1
 	fi
 
@@ -365,7 +365,7 @@ backup_live_install() {
 			die "required backup command not found: $backup_command"
 	done
 
-	backup_parent=$state_home/dwm-titus/live-update-backups
+	backup_parent=$state_home/dwm-qud/live-update-backups
 	backup_stamp=$(date -u +%Y%m%dT%H%M%SZ)
 	mkdir -p "$backup_parent"
 	backup_dir=$backup_parent/$backup_stamp-$$
@@ -377,7 +377,7 @@ backup_live_install() {
 	fi
 	if [ -e "$data_dir" ]; then
 		tar -C "$(dirname "$data_dir")" -cpf \
-			"$backup_dir/dwm-titus-data.tar" "$(basename "$data_dir")"
+			"$backup_dir/dwm-qud-data.tar" "$(basename "$data_dir")"
 	fi
 
 	system_manifest=$work/system-files
@@ -391,7 +391,7 @@ backup_live_install() {
 	done <"$install_sources_file"
 	add_system_backup_path "$display_root_helper_target"
 	add_system_backup_path "$desktop_root_helper_target"
-	add_system_backup_path "$prefix/share/dwm-titus/desktop-install.json"
+	add_system_backup_path "$prefix/share/dwm-qud/desktop-install.json"
 	for cursor_source in "$repo_dir"/assets/cursors/Capitaine-Cursors*; do
 		[ -d "$cursor_source" ] || continue
 		add_system_backup_path "$data_root/icons/${cursor_source##*/}"
@@ -408,7 +408,7 @@ backup_live_install() {
 			add_system_backup_path "$palette_target"
 		done
 	done
-	add_system_backup_path "$data_root/licenses/dwm-titus/capitaine-cursors/COPYING"
+	add_system_backup_path "$data_root/licenses/dwm-qud/capitaine-cursors/COPYING"
 	if [ -s "$system_manifest" ]; then
 		tar -C / -cpf "$backup_dir/system-files.tar" -T "$system_manifest"
 	fi

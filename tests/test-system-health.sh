@@ -6,11 +6,11 @@ HELPER=$ROOT_DIR/scripts/dwm-system-health
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
-mkdir -p "$work/bin" "$work/home/.config/dwm-titus" "$work/home/.config/quickshell"
+mkdir -p "$work/bin" "$work/home/.config/dwm-qud" "$work/home/.config/quickshell"
 printf 'ID=fedora\nPRETTY_NAME="Fedora Test"\n' >"$work/os-release"
-: >"$work/home/.config/dwm-titus/hotkeys.toml"
-: >"$work/home/.config/dwm-titus/themes.toml"
-: >"$work/home/.config/dwm-titus/window-rules.toml"
+: >"$work/home/.config/dwm-qud/hotkeys.toml"
+: >"$work/home/.config/dwm-qud/themes.toml"
+: >"$work/home/.config/dwm-qud/window-rules.toml"
 : >"$work/home/.config/quickshell/shell.qml"
 
 cat >"$work/bin/dnf" <<'SCRIPT'

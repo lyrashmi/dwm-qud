@@ -272,13 +272,13 @@ set -eu
 printf '%s\n' "$*" >>"${DWM_XVFB_NOTIFICATION_LOG:?}"
 EOF
 chmod 755 "$work/bin/notify-send"
-mkdir -p "$home/.config/dwm-titus" "$home/.local/share/dwm-titus/config"
-cp "$repo_dir/config/hotkeys.toml" "$home/.config/dwm-titus/hotkeys.toml"
-cp "$repo_dir/config/themes.toml" "$home/.config/dwm-titus/themes.toml"
-cp "$repo_dir/config/window-rules.toml" "$home/.config/dwm-titus/window-rules.toml"
-cp "$repo_dir/config/"*.toml "$home/.local/share/dwm-titus/config/"
+mkdir -p "$home/.config/dwm-qud" "$home/.local/share/dwm-qud/config"
+cp "$repo_dir/config/hotkeys.toml" "$home/.config/dwm-qud/hotkeys.toml"
+cp "$repo_dir/config/themes.toml" "$home/.config/dwm-qud/themes.toml"
+cp "$repo_dir/config/window-rules.toml" "$home/.config/dwm-qud/window-rules.toml"
+cp "$repo_dir/config/"*.toml "$home/.local/share/dwm-qud/config/"
 sed -i '/^rules = \[/a\  { class="DwmXvfbTerminal", isterminal=1 },' \
-	"$home/.config/dwm-titus/window-rules.toml"
+	"$home/.config/dwm-qud/window-rules.toml"
 
 cat >"$work/xclient.c" <<'EOF'
 #include <X11/Xlib.h>
@@ -860,7 +860,7 @@ printf '%s\n' \
 	'  { mod="SUPER", key="v", desc="Xvfb mouse resize", func="resizemouse" },' \
 	'  { mod="SUPER", key="u", desc="Xvfb reload tag", func="view", ui=16 },' \
 	'  { mod="SUPER SHIFT", key="y", desc="Xvfb fake fullscreen", func="togglefakefullscreen" },' \
-	']' >"$home/.config/dwm-titus/hotkeys.toml"
+	']' >"$home/.config/dwm-qud/hotkeys.toml"
 reload_rules
 DISPLAY=$display xdotool key Super+u
 wait_for_current_desktop 4
@@ -872,7 +872,7 @@ wait_for_current_desktop 0
 	printf '%s\n' 'valid test configuration emitted a notification' >&2
 	exit 1
 }
-printf '%s\n' '=' >"$home/.config/dwm-titus/hotkeys.toml"
+printf '%s\n' '=' >"$home/.config/dwm-qud/hotkeys.toml"
 wait_for_config_notifications 1
 kill -USR1 "$dwm_pid"
 wait_for_config_notifications 2
@@ -1309,15 +1309,15 @@ DISPLAY=$display xprop -id "$popup_win" -f WM_NAME 8s \
 wait_for_window_above "$popup_win" "$fullscreen_win"
 
 # Last match wins, and removing the exception takes effect on a live overlay.
-cp "$home/.config/dwm-titus/window-rules.toml" "$work/rewards-rules-backup"
+cp "$home/.config/dwm-qud/window-rules.toml" "$work/rewards-rules-backup"
 sed -i '/^]/i\  { class="wfhelper", title="WFHelper Relic Rewards", alwaysontop=0 },' \
-	"$home/.config/dwm-titus/window-rules.toml"
+	"$home/.config/dwm-qud/window-rules.toml"
 wait_for_window_above "$fullscreen_win" "$popup_win"
-cp "$work/rewards-rules-backup" "$home/.config/dwm-titus/window-rules.toml"
+cp "$work/rewards-rules-backup" "$home/.config/dwm-qud/window-rules.toml"
 wait_for_window_above "$popup_win" "$fullscreen_win"
-sed -i '/class="wfhelper"/d' "$home/.config/dwm-titus/window-rules.toml"
+sed -i '/class="wfhelper"/d' "$home/.config/dwm-qud/window-rules.toml"
 wait_for_window_above "$fullscreen_win" "$popup_win"
-cp "$work/rewards-rules-backup" "$home/.config/dwm-titus/window-rules.toml"
+cp "$work/rewards-rules-backup" "$home/.config/dwm-qud/window-rules.toml"
 wait_for_window_above "$popup_win" "$fullscreen_win"
 wait_for_input_focus "$fullscreen_win"
 kill "$popup_client_pid"
@@ -1384,12 +1384,12 @@ fullscreen_client_pid=
 wait_for_fullscreen_monitors ''
 # Opening rules use true monitor-sized fullscreen, not the tag layout.
 # A later matching rule may override the request, including by omission.
-cp "$home/.config/dwm-titus/window-rules.toml" "$work/fullscreen-rules-backup"
+cp "$home/.config/dwm-qud/window-rules.toml" "$work/fullscreen-rules-backup"
 for rule_value in 'fullscreen=1' 'fullscreen=0' 'noswallow=1' 'fullscreen="1"' 'fullscreen=2'; do
-	cp "$work/fullscreen-rules-backup" "$home/.config/dwm-titus/window-rules.toml"
+	cp "$work/fullscreen-rules-backup" "$home/.config/dwm-qud/window-rules.toml"
 	sed -i '/^rules = \[/a\  { class="DwmXvfbRuntime", fullscreen=1 },\
   { class="DwmXvfbRuntime", '"$rule_value"' },' \
-		"$home/.config/dwm-titus/window-rules.toml"
+		"$home/.config/dwm-qud/window-rules.toml"
 	reload_rules
 	: >"$work/rule-window-id"
 	DISPLAY=$display "$work/xclient" >"$work/rule-window-id" 2>"$work/rule-client.log" &
@@ -1431,11 +1431,11 @@ for rule_value in 'fullscreen=1' 'fullscreen=0' 'noswallow=1' 'fullscreen="1"' '
 done
 # A fixed-size hint must not force floating or constrain tiling when ignored.
 for hints_case in enabled late zero omitted invalid; do
-	cp "$work/fullscreen-rules-backup" "$home/.config/dwm-titus/window-rules.toml"
+	cp "$work/fullscreen-rules-backup" "$home/.config/dwm-qud/window-rules.toml"
 	hints_fields='ignoresizehints=1'
 	[ "$hints_case" != late ] || hints_fields='title="Ignore Hints", ignoresizehints=1'
 	sed -i '/^rules = \[/a\  { class="DwmXvfbRuntime", '"$hints_fields"' },' \
-		"$home/.config/dwm-titus/window-rules.toml"
+		"$home/.config/dwm-qud/window-rules.toml"
 	case $hints_case in
 	zero) hints_override='ignoresizehints=0' ;;
 	omitted) hints_override='noswallow=1' ;;
@@ -1444,7 +1444,7 @@ for hints_case in enabled late zero omitted invalid; do
 	esac
 	if [ -n "$hints_override" ]; then
 		sed -i '/^]/i\  { class="DwmXvfbRuntime", '"$hints_override"' },' \
-			"$home/.config/dwm-titus/window-rules.toml"
+			"$home/.config/dwm-qud/window-rules.toml"
 	fi
 	reload_rules
 	: >"$work/hints-id"
@@ -1485,7 +1485,7 @@ for hints_case in enabled late zero omitted invalid; do
 done
 # Borderless windowed rules fill the monitor without advertising fullscreen.
 for windowed_case in startup late both ignore-hints zero omitted invalid; do
-	cp "$work/fullscreen-rules-backup" "$home/.config/dwm-titus/window-rules.toml"
+	cp "$work/fullscreen-rules-backup" "$home/.config/dwm-qud/window-rules.toml"
 	case $windowed_case in
 	late) windowed_fields='title="DC Universe Online [DCUOT.", fakefullscreen=1' ;;
 	ignore-hints) windowed_fields='fakefullscreen=1, ignoresizehints=1' ;;
@@ -1493,7 +1493,7 @@ for windowed_case in startup late both ignore-hints zero omitted invalid; do
 	*) windowed_fields='fakefullscreen=1' ;;
 	esac
 	sed -i '/^rules = \[/a\  { class="DwmXvfbRuntime", '"$windowed_fields"' },' \
-		"$home/.config/dwm-titus/window-rules.toml"
+		"$home/.config/dwm-qud/window-rules.toml"
 	case $windowed_case in
 	zero) windowed_override='fakefullscreen=0' ;;
 	omitted) windowed_override='noswallow=1' ;;
@@ -1502,7 +1502,7 @@ for windowed_case in startup late both ignore-hints zero omitted invalid; do
 	esac
 	if [ -n "$windowed_override" ]; then
 		sed -i '/^]/i\  { class="DwmXvfbRuntime", '"$windowed_override"' },' \
-			"$home/.config/dwm-titus/window-rules.toml"
+			"$home/.config/dwm-qud/window-rules.toml"
 	fi
 	reload_rules
 	: >"$work/windowed-id"
@@ -1571,12 +1571,12 @@ for windowed_case in startup late both ignore-hints zero omitted invalid; do
 done
 # Wine may publish its distinguishing game title only after mapping.
 for late_override in '' 'fullscreen=0' 'noswallow=1'; do
-	cp "$work/fullscreen-rules-backup" "$home/.config/dwm-titus/window-rules.toml"
+	cp "$work/fullscreen-rules-backup" "$home/.config/dwm-qud/window-rules.toml"
 	sed -i '/^rules = \[/a\  { class="DwmXvfbRuntime", title="DC Universe Online [DCUOT.", fullscreen=1 },' \
-		"$home/.config/dwm-titus/window-rules.toml"
+		"$home/.config/dwm-qud/window-rules.toml"
 	if [ -n "$late_override" ]; then
 		sed -i '/^]/i\  { class="DwmXvfbRuntime", '"$late_override"' },' \
-			"$home/.config/dwm-titus/window-rules.toml"
+			"$home/.config/dwm-qud/window-rules.toml"
 	fi
 	reload_rules
 	: >"$work/late-rule-id"
@@ -1617,9 +1617,9 @@ for late_override in '' 'fullscreen=0' 'noswallow=1'; do
 	wait "$fullscreen_client_pid" 2>/dev/null || true
 	fullscreen_client_pid=
 done
-cp "$work/fullscreen-rules-backup" "$home/.config/dwm-titus/window-rules.toml"
+cp "$work/fullscreen-rules-backup" "$home/.config/dwm-qud/window-rules.toml"
 sed -i '/^rules = \[/a\  { class="DwmXvfbRuntime", fullscreen=1, tags=2 },' \
-	"$home/.config/dwm-titus/window-rules.toml"
+	"$home/.config/dwm-qud/window-rules.toml"
 reload_rules
 DISPLAY=$display "$work/xclient" >"$work/rule-hidden-id" 2>"$work/rule-hidden.log" &
 fullscreen_client_pid=$!
@@ -1645,7 +1645,7 @@ wait "$fullscreen_client_pid" 2>/dev/null || true
 fullscreen_client_pid=
 DISPLAY=$display xdotool key super+1
 wait_for_current_desktop 0
-cp "$work/fullscreen-rules-backup" "$home/.config/dwm-titus/window-rules.toml"
+cp "$work/fullscreen-rules-backup" "$home/.config/dwm-qud/window-rules.toml"
 reload_rules
 
 kill "$panel_pid"
@@ -1707,9 +1707,9 @@ for rule_fullscreen in 0 1 fake-parent windowed windowed-fake-parent; do
 	esac
 	rule_field=fullscreen
 	case $rule_fullscreen in windowed*) rule_field=fakefullscreen ;; esac
-	cp "$work/fullscreen-rules-backup" "$home/.config/dwm-titus/window-rules.toml"
+	cp "$work/fullscreen-rules-backup" "$home/.config/dwm-qud/window-rules.toml"
 	sed -i '/^rules = \[/a\  { title="dwm-xvfb-swallowed", '"$rule_field"'='"$rule_value"' },' \
-		"$home/.config/dwm-titus/window-rules.toml"
+		"$home/.config/dwm-qud/window-rules.toml"
 	reload_rules
 	: >"$work/swallow-window-ids"
 	rm -f "$work/swallow-child-gate"
@@ -1779,14 +1779,14 @@ stack_client_pid=
 # Restore the normal key map and verify that Super+Shift+Q exits cleanly and
 # launches the session-stop hook. Use an isolated marker instead of touching
 # the host's real graphical-session targets from the nested X11 test.
-mkdir -p "$home/.local/share/dwm-titus/scripts"
-cat >"$home/.local/share/dwm-titus/scripts/autostop.sh" <<EOF
+mkdir -p "$home/.local/share/dwm-qud/scripts"
+cat >"$home/.local/share/dwm-qud/scripts/autostop.sh" <<EOF
 #!/bin/sh
 sleep 0.2
 : >"$work/autostop.called"
 EOF
-chmod +x "$home/.local/share/dwm-titus/scripts/autostop.sh"
-cp "$repo_dir/config/hotkeys.toml" "$home/.config/dwm-titus/hotkeys.toml"
+chmod +x "$home/.local/share/dwm-qud/scripts/autostop.sh"
+cp "$repo_dir/config/hotkeys.toml" "$home/.config/dwm-qud/hotkeys.toml"
 reload_rules
 DISPLAY=$display xdotool key Super+Shift+q
 i=0
