@@ -830,6 +830,16 @@ if [[ ! -d "$HOME/.local/share/dwm-qud/config/quickshell" ]]; then
     "$HOME/.local/share/dwm-qud/config/"
 fi
 
+# ── Picom Scanlines Shader ──────────────────────────────
+info "Installing Picom scanlines shader..."
+mkdir -p "$HOME/.config/picom"
+install -m 0644 "$REPO_DIR/config/picom/scanlines.glsl" "$HOME/.config/picom/scanlines.glsl"
+
+# Fix the placeholder path in the freshly installed picom.conf
+if [[ -f "$HOME/.config/picom.conf" ]]; then
+	sed -i "s|@SHADER_PATH@|$HOME/.config/picom/scanlines.glsl|g" "$HOME/.config/picom.conf"
+fi
+ok "Picom scanlines shader installed and configured."
 
 # Install a low-priority DNF5 default without replacing administrator settings.
 # The main /etc/dnf/dnf.conf and later drop-ins keep precedence.
