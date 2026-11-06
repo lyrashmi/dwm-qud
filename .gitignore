@@ -56,3 +56,4 @@ __pycache__/
 *.pre-*
 /set-cursor-size.sh
 *.backup[0-9]*
+.aider*
