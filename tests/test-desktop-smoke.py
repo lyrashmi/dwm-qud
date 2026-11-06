@@ -101,27 +101,25 @@ def main():
                 shell = start(["quickshell", "--no-duplicate"])
                 wait_for("Quickshell IPC", lambda: ipc("close").returncode == 0)
 
-            def panel_visible():
-         # Find all visible windows owned by the Quickshell process
-                search_result = run("xdotool", "search", "--onlyvisible", "--pid", str(shell.pid))
-                windows = search_result.stdout.split()
+                def panel_visible():
+                    search_result = run("xdotool", "search", "--onlyvisible", "--pid", str(shell.pid))
+                    windows = search_result.stdout.split()
+                    
+                    print(f"\n=== DEBUG: Found {len(windows)} windows for Quickshell PID {shell.pid} ===")
+                    for window in windows:
+                        geo_result = run("xdotool", "getwindowgeometry", "--shell", window)
+                        geometry = geo_result.stdout.splitlines()
+                        print(f"DEBUG: Window ID {window} geometry:")
+                        for line in geometry:
+                            print(f"  {line}")
+                        
+                        if "HEIGHT=30" in geometry and "WIDTH=1024" in geometry:
+                            print("DEBUG: Found matching panel!")
+                            return True
+                            
+                    print("=== END DEBUG ===\n")
+                    return False
 
-                print(f"\n=== DEBUG: Found {len(windows)} windows for Quickshell PID {shell.pid} ===")
-                for window in windows:
-         # Get the geometry of each window
-                    geo_result = run("xdotool", "getwindowgeometry", "--shell", window)
-                    geometry = geo_result.stdout.splitlines()
-                    print(f"DEBUG: Window ID {window} geometry:")
-                    for line in geometry:
-                        print(f"  {line}")
-
-        # Check if it matches our expected panel dimensions
-        if "HEIGHT=30" in geometry and "WIDTH=1024" in geometry:
-            print("DEBUG: Found matching panel!")
-            return True
-
-    print("=== END DEBUG ===\n")
-    return False
                 wait_for("managed panel", panel_visible)
                 run("xdotool", "key", "--clearmodifiers", "super+r").check_returncode()
                 wait_for("launcher hotkey", launcher_visible)
