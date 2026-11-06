@@ -33,8 +33,8 @@ Rectangle {
         iconSourceIndex = 0;
     }
 
-    Layout.preferredWidth: Theme.trayItemSize
-    Layout.preferredHeight: Theme.trayItemSize
+    Layout.preferredWidth: Theme.barTrayItemSize
+    Layout.preferredHeight: Theme.barTrayItemSize
     radius: Theme.smallRadius
     color: trayMouse.containsMouse ? Theme.controlHoverFill : Theme.transparent
     border.color: Theme.controlNormalBorder
@@ -51,10 +51,10 @@ Rectangle {
         id: trayIcon
 
         anchors.centerIn: parent
-        width: Theme.trayIconSize
-        height: Theme.trayIconSize
+        width: Theme.barTrayIconSize
+        height: Theme.barTrayIconSize
         source: root.iconSources.length > root.iconSourceIndex ? root.iconSources[root.iconSourceIndex] : ""
-        implicitSize: Theme.trayIconSize
+        implicitSize: Theme.barTrayIconSize
         asynchronous: true
         mipmap: true
         visible: status === Image.Ready
@@ -75,7 +75,7 @@ Rectangle {
         }
         color: trayMouse.containsMouse ? Theme.controlHoverText : Theme.text
         font.family: Theme.fontFamily
-        font.pixelSize: Theme.tinyFontSize
+        font.pixelSize: Theme.barTinyFontSize
         font.bold: true
     }
 

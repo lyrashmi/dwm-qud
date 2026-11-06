@@ -20,8 +20,8 @@ Rectangle {
         }
     }
 
-    Layout.preferredWidth: Theme.pillHeight
-    Layout.preferredHeight: Theme.pillHeight
+    Layout.preferredWidth: Theme.barPillHeight
+    Layout.preferredHeight: Theme.barPillHeight
     radius: Theme.pillRadius
     clip: true
 
@@ -67,8 +67,8 @@ Rectangle {
     IconImage {
         z: 1
         anchors.centerIn: parent
-        width: Theme.trayIconSize
-        height: Theme.trayIconSize
+        width: Theme.barTrayIconSize
+        height: Theme.barTrayIconSize
         source: Icons.launcherIcon(root.app.appClass)
     }
 
@@ -79,7 +79,7 @@ Rectangle {
         color: "transparent"
         radius: Theme.pillRadius
 
-        border.color: active
+        border.color: root.active
             ? Theme.controlSelectedBorder
             : Theme.controlNormalBorder
 

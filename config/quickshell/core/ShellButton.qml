@@ -17,14 +17,15 @@ Rectangle {
     property bool danger: false
     property bool primary: false
     property bool compact: true
+    property bool panelScaled: false
     property bool outlined: true
     property bool primaryHighlighted: false
     property bool hovered: buttonMouse.containsMouse
 
     signal activated
 
-    implicitWidth: buttonContent.implicitWidth + (Theme.controlPaddingX * 2)
-    implicitHeight: Theme.controlHeight
+    implicitWidth: buttonContent.implicitWidth + ((root.panelScaled ? Theme.barControlPaddingX : Theme.controlPaddingX) * 2)
+    implicitHeight: root.panelScaled ? Theme.barControlHeight : Theme.controlHeight
     activeFocusOnTab: root.enabled
     Accessible.role: Accessible.Button
     Accessible.name: root.label
@@ -90,7 +91,7 @@ Rectangle {
                 : root.primary ? ((root.hovered || root.primaryHighlighted) ? Theme.accentHoverText : Theme.accentText)
                 : root.hovered ? Theme.controlHoverText : Theme.controlNormalText
             font.family: Theme.fontFamily
-            font.pixelSize: root.compact ? Theme.fontBodySmallSize : Theme.fontBodySize
+            font.pixelSize: root.panelScaled ? Theme.barSmallFontSize : (root.compact ? Theme.fontBodySmallSize : Theme.fontBodySize)
             font.bold: true
             elide: Text.ElideRight
         }

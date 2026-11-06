@@ -827,17 +827,6 @@ font_candidate_resolved_family() {
 		printf '%s' "$resolved"
 		return 0
 	}
-	case ${candidate,,}:${resolved,,} in
-	'meslolgs nerd font mono:meslolgs nerd font' | \
-		'meslolgs nerd font mono:meslolgs nf' | \
-		'meslolgs nerd font:meslolgs nerd font mono' | \
-		'meslolgs nerd font:meslolgs nf' | \
-		'meslolgs nf:meslolgs nerd font mono' | \
-		'meslolgs nf:meslolgs nerd font')
-		printf '%s' "$resolved"
-		return 0
-		;;
-	esac
 	return 1
 }
 

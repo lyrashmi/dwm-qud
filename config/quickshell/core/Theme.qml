@@ -169,6 +169,17 @@ Singleton {
         return Math.max(1, Math.round(desktopSize / (root.desktopTypography ? root.nativeScale : 1.0)));
     }
 
+    // Dedicated scaling for the top bar. Other shell surfaces remain unchanged.
+    readonly property real panelScale: 1.20
+
+    function panelScaledSize(value) {
+        return Math.round(root.scaledSize(value) * root.panelScale);
+    }
+
+    function panelScaledFontSize(value, minimum) {
+        return Math.max(1, Math.round(root.scaledFontSize(value, minimum) * root.panelScale));
+    }
+
     // Shared spacing and type scales adapted from Omarchy's shell language.
     // Values intentionally map to the pre-existing dwm-titus geometry.
     readonly property int spacingXxs: scaledSize(2)
@@ -254,4 +265,23 @@ Singleton {
     readonly property int trayItemSize: scaledSize(24)
     readonly property int trayIconSize: scaledSize(18)
     readonly property int closeButtonSize: scaledSize(30)
+
+    // Top-bar-only dimensions and typography.
+    readonly property int barPanelHeight: panelScaledSize(30)
+    readonly property int barPanelGap: Math.round(panelGap * panelScale)
+    readonly property int barPillHeight: panelScaledSize(26)
+    readonly property int barPillHorizontalPadding: panelScaledSize(9)
+    readonly property int barCompactWidgetSize: panelScaledSize(22)
+    readonly property int barCompactWidgetHorizontalPadding: panelScaledSize(6)
+    readonly property real barNetworkWidgetHorizontalPadding: networkWidgetHorizontalPadding * panelScale
+    readonly property int barCompactSpacing: Math.round(compactSpacing * panelScale)
+    readonly property int barWorkspaceButtonSize: panelScaledSize(22)
+    readonly property int barTrayItemSize: panelScaledSize(24)
+    readonly property int barTrayIconSize: panelScaledSize(18)
+    readonly property int barFontSize: panelScaledFontSize(13, 10)
+    readonly property int barSmallFontSize: panelScaledFontSize(12, 10)
+    readonly property int barTinyFontSize: panelScaledFontSize(10, 8)
+    readonly property int barIconFontSize: panelScaledFontSize(14, 8)
+    readonly property int barControlHeight: panelScaledSize(30)
+    readonly property int barControlPaddingX: panelScaledSize(9)
 }

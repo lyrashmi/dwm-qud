@@ -488,22 +488,22 @@ cp -a "$bin_dir" "$alias_font_bin"
 cat >"$alias_font_bin/fc-list" <<'EOF'
 #!/bin/sh
 [ "${1:-}" = ':charset=20-7e' ] || exit 2
-printf 'MesloLGS NF\tRegular\n'
+printf 'SauceCodePro Nerd Font\tRegular\n'
 EOF
 cat >"$alias_font_bin/fc-match" <<'EOF'
 #!/bin/sh
-printf 'MesloLGS NF\n'
+printf 'SauceCodePro Nerd Font\n'
 EOF
 chmod +x "$alias_font_bin/fc-list" "$alias_font_bin/fc-match"
-printf 'personalization-protocol\t1\t0\nfont\tMesloLGS Nerd Font Mono\n' \
+printf 'personalization-protocol\t1\t0\nfont\tSauceCodePro Nerd Font\n' \
 	>"$config_home/dwm-titus/personalization.conf"
 alias_font=$(HOME=$home PATH=$alias_font_bin XDG_CONFIG_HOME=$config_home \
 	XDG_DATA_HOME=$data_root DWM_APPEARANCE_DATA_DIRS=$data_root \
 	DWM_APPEARANCE_WALLPAPER_DIR=$wallpaper_dir QT_QPA_PLATFORMTHEME=qt6ct \
-	DWM_TEST_FONT_NAME='meslolgs nerd font mono 11' "$helper" inventory)
-grep -Fqx $'selection\tfont\tavailable\tMesloLGS NF\tmeslolgs nerd font mono 11\tCurrent desktop font family is installed' \
+	DWM_TEST_FONT_NAME='SauceCodePro Nerd Font 11' "$helper" inventory)
+grep -Fqx $'selection\tfont\tavailable\tSauceCodePro Nerd Font\tSauceCodePro Nerd Font 11\tCurrent desktop font family is installed' \
 	<<<"$alias_font"
-grep -Fqx $'candidate\tfont\tavailable\tMesloLGS Nerd Font Mono\tMesloLGS Nerd Font Mono\tExact Fontconfig family' \
+grep -Fqx $'candidate\tfont\tavailable\tSauceCodePro Nerd Font\tSauceCodePro Nerd Font\tExact Fontconfig family' \
 	<<<"$alias_font"
 rm -f "$config_home/dwm-titus/personalization.conf"
 

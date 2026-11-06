@@ -7,8 +7,9 @@ Rectangle {
     property bool active: false
     property bool hovered: false
     property bool outlined: false
+    property bool panelScaled: false
 
-    implicitHeight: Theme.pillHeight
+    implicitHeight: root.panelScaled ? Theme.barPillHeight : Theme.pillHeight
     opacity: 1.0
     color: active ? Theme.controlSelectedFill
         : hovered ? Theme.controlHoverFill

@@ -2209,17 +2209,6 @@ while IFS= read -r candidate; do
 		test_font=$candidate
 		break
 	fi
-	case $candidate:$resolved in
-	'MesloLGS Nerd Font Mono:MesloLGS Nerd Font' | \
-		'MesloLGS Nerd Font Mono:MesloLGS NF' | \
-		'MesloLGS Nerd Font:MesloLGS Nerd Font Mono' | \
-		'MesloLGS Nerd Font:MesloLGS NF' | \
-		'MesloLGS NF:MesloLGS Nerd Font Mono' | \
-		'MesloLGS NF:MesloLGS Nerd Font')
-		test_font=$candidate
-		break
-		;;
-	esac
 done <"$font_candidates"
 [ -n "$test_font" ]
 DISPLAY=$display HOME=$home XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_home \
@@ -2301,7 +2290,7 @@ if [ "$font_scale" != 1.00 ]; then
 	printf 'Font reset did not restore the managed scale: %s\n' "$font_scale" >&2
 	exit 1
 fi
-# The isolated nested HOME does not inherit user-installed Meslo fonts. Keep
+# The isolated nested HOME does not inherit user-installed Nerd Font and heading fonts. Keep
 # the fixture on an exact system family after proving reset, so later aggregate
 # appearance assertions isolate the state they are intended to test.
 DISPLAY=$display HOME=$home XDG_CONFIG_HOME=$config_home XDG_DATA_HOME=$data_home \

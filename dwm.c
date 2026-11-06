@@ -46,7 +46,6 @@
 #include <X11/Xproto.h>
 #include <X11/Xutil.h>
 #include <X11/extensions/Xrender.h>
-#include <X11/extensions/shape.h>
 #ifdef XINERAMA
 #include <X11/extensions/Xinerama.h>
 #endif /* XINERAMA */
@@ -71,7 +70,6 @@
                                * MAX(0, MIN((y)+(h),(z)->y+(z)->h) - MAX((y),(z)->y)))
 #define ISVISIBLE(C)            ((C->tags & C->mon->tagset[C->mon->seltags]))
 #define MOUSEMASK               (BUTTONMASK|PointerMotionMask)
-#define ALACRITTY_BORDER 9
 #define WIDTH(X)                ((X)->w + 2 * (X)->bw)
 #define HEIGHT(X)               ((X)->h + 2 * (X)->bw)
 #define TAGMASK                 ((1 << LENGTH(tags)) - 1)
@@ -122,7 +120,6 @@ struct Client {
 	unsigned int tags;
 	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isterminal, noswallow, alwaysontop, ewmhabove;
 	int issteam;
-	int isalacritty;
 	int rulefullscreenapplied;
 	int ignoresizehints;
 	int iswindowedfullscreen; /* Monitor-sized geometry without EWMH fullscreen. */
@@ -207,8 +204,6 @@ static void applyfullscreenrule(Client *c, int mode);
 static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
 static void arrange(Monitor *m);
 static void arrangemon(Monitor *m);
-static void updatealacrittyshapes(Monitor *m);
-static void destroyalacrittyoverlays(Monitor *m);
 static void attach(Client *c);
 static void attachbottom(Client *c);
 static void attachstack(Client *c);
@@ -434,16 +429,7 @@ static Cur *cursor[CurLast];
 static Clr **scheme;
 static Display *dpy;
 static Drw *drw;
-static Clr alacrittyborder;
-static Clr alacrittysharedborder;
 
-typedef struct AlacrittyOverlay AlacrittyOverlay;
-struct AlacrittyOverlay {
-    Window win;
-    Monitor *mon;
-    AlacrittyOverlay *next;
-};
-static AlacrittyOverlay *alacrittyoverlays;
 static Monitor *mons, *selmon;
 static OverrideWindow *overridewindows;
 static Window focusedmenu;
@@ -592,7 +578,6 @@ applyrules(Client *c)
 	XGetClassHint(dpy, c->win, &ch);
 	class    = ch.res_class ? ch.res_class : broken;
 	instance = ch.res_name  ? ch.res_name  : broken;
-	c->isalacritty = strcmp(class, "Alacritty") == 0;
 
 	if (strstr(class, "Steam") || strstr(class, "steam_app_"))
 		c->issteam = 1;
@@ -806,129 +791,12 @@ arrange(Monitor *m)
 		arrangemon(m);
 }
 
-static void
-destroyalacrittyoverlays(Monitor *m)
-{
-    AlacrittyOverlay **link, *overlay;
-
-    for (link = &alacrittyoverlays; *link;) {
-        overlay = *link;
-        if (!m || overlay->mon == m) {
-            XDestroyWindow(dpy, overlay->win);
-            *link = overlay->next;
-            free(overlay);
-        } else {
-            link = &overlay->next;
-        }
-    }
-}
-
-static void
-createalacrittyoverlay(Monitor *m, int x, int y, unsigned int w, unsigned int h)
-{
-    XSetWindowAttributes attr;
-    AlacrittyOverlay *overlay;
-    Window win;
-
-    if (!w || !h)
-        return;
-
-    attr.override_redirect = True;
-    attr.background_pixel = alacrittysharedborder.pixel;
-
-    win = XCreateWindow(dpy, root, x, y, w, h, 0,
-        CopyFromParent, InputOutput, CopyFromParent,
-        CWOverrideRedirect | CWBackPixel, &attr);
-
-    /* Empty input region: the overlay cannot intercept mouse input. */
-    XShapeCombineRectangles(dpy, win, ShapeInput, 0, 0,
-        NULL, 0, ShapeSet, Unsorted);
-
-    overlay = ecalloc(1, sizeof *overlay);
-    overlay->win = win;
-    overlay->mon = m;
-    overlay->next = alacrittyoverlays;
-    alacrittyoverlays = overlay;
-
-    XMapWindow(dpy, win);
-}
-
-static void
-raisealacrittyoverlays(void)
-{
-    AlacrittyOverlay *overlay;
-
-    for (overlay = alacrittyoverlays; overlay; overlay = overlay->next)
-        XRaiseWindow(dpy, overlay->win);
-}
-
-static void
-updatealacrittyshapes(Monitor *m)
-{
-    Client *c, *other;
-    XRectangle rect;
-    int omitright, omitbottom;
-
-    destroyalacrittyoverlays(m);
-
-    for (c = m->clients; c; c = c->next) {
-        if (!c->isalacritty)
-            continue;
-
-        XShapeCombineMask(dpy, c->win, ShapeBounding, 0, 0, None, ShapeSet);
-
-        if (c->isfullscreen || c->isfloating || !ISVISIBLE(c) || c->bw <= 0)
-            continue;
-
-        omitright = omitbottom = 0;
-
-        for (other = m->clients; other; other = other->next) {
-            if (other == c || !other->isalacritty
-            || other->isfullscreen || other->isfloating
-            || !ISVISIBLE(other) || other->bw <= 0)
-                continue;
-
-            if (c->x + c->w + c->bw == other->x - other->bw
-            && c->y - c->bw < other->y + other->h + other->bw
-            && other->y - other->bw < c->y + c->h + c->bw)
-                omitright = 1;
-
-            if (c->y + c->h + c->bw == other->y - other->bw
-            && c->x - c->bw < other->x + other->w + other->bw
-            && other->x - other->bw < c->x + c->w + c->bw)
-                omitbottom = 1;
-        }
-
-        if (!omitright && !omitbottom)
-            continue;
-
-        rect.x = -c->bw;
-        rect.y = -c->bw;
-        rect.width = (unsigned short)(c->w + 2 * c->bw
-            - (omitright ? c->bw : 0));
-        rect.height = (unsigned short)(c->h + 2 * c->bw
-            - (omitbottom ? c->bw : 0));
-
-        XShapeCombineRectangles(dpy, c->win, ShapeBounding, 0, 0,
-            &rect, 1, ShapeSet, Unsorted);
-
-        if (omitright)
-            createalacrittyoverlay(m, c->x + c->w + c->bw,
-                c->y - c->bw, c->bw, c->h + 2 * c->bw);
-
-        if (omitbottom)
-            createalacrittyoverlay(m, c->x - c->bw,
-                c->y + c->h + c->bw, c->w + 2 * c->bw, c->bw);
-    }
-}
-
 void
 arrangemon(Monitor *m)
 {
 	copystr(m->ltsymbol, sizeof m->ltsymbol, m->lt[m->sellt]->symbol);
 	if (m->lt[m->sellt]->arrange)
 		m->lt[m->sellt]->arrange(m);
-	updatealacrittyshapes(m);
 }
 
 void
@@ -1097,7 +965,6 @@ cleanupmon(Monitor *mon)
 		for (m = mons; m && m->next != mon; m = m->next);
 		m->next = mon->next;
 	}
-	destroyalacrittyoverlays(mon);
 	/* External dock windows are managed by their own process. */
 	free(mon);
 }
@@ -1319,7 +1186,7 @@ configurerequest(XEvent *e)
 			return;
 		}
 		if (ev->value_mask & CWBorderWidth) {
-			c->bw = c->isalacritty && !c->isfullscreen ? ALACRITTY_BORDER : 0;
+			c->bw = 0;
 			XSetWindowBorderWidth(dpy, c->win, c->bw);
 		}
 		if (c->isfloating || !selmon->lt[selmon->sellt]->arrange) {
@@ -1580,21 +1447,6 @@ expose(XEvent *e)
 	}
 }
 
-static void
-setwindowborder(Window win, unsigned long pixel)
-{
-    XWindowAttributes attr;
-    XRenderPictFormat *format;
-
-    if (XGetWindowAttributes(dpy, win, &attr)) {
-        format = XRenderFindVisualFormat(dpy, attr.visual);
-        if (format && format->direct.alphaMask)
-            pixel |= (unsigned long)format->direct.alphaMask
-                     << format->direct.alpha;
-    }
-
-    XSetWindowBorder(dpy, win, pixel);
-}
 
 
 void
@@ -2185,7 +2037,7 @@ manage(Window w, XWindowAttributes *wa)
 	} else {
 		c->mon = selmon;
 		rulefullscreen = applyrules(c);
-		c->bw = c->isalacritty ? ALACRITTY_BORDER : 0;
+		c->bw = 0;
 		term = termforwin(c);
 	}
 
@@ -2197,8 +2049,6 @@ manage(Window w, XWindowAttributes *wa)
 	c->y = MAX(c->y, c->mon->wy);
 	wc.border_width = c->bw;
 	XConfigureWindow(dpy, w, CWBorderWidth, &wc);
-	if (c->isalacritty)
-		setwindowborder(w, alacrittyborder.pixel);
 	configure(c); /* propagates border_width, if size doesn't change */
 	updatewindowtype(c);
 	updatesizehints(c);
@@ -2489,8 +2339,6 @@ nexttiled(Client *c)
 int
 noborder(Client *c)
 {
-	if (c->isalacritty)
-		return 0;
 	int monocle_layout = 0;
 
 	if (&monocle == c->mon->lt[c->mon->sellt]->arrange)
@@ -2996,7 +2844,6 @@ restackprioritywindows(void)
 	OverrideWindow *ow;
 	Window focused;
 
-	raisealacrittyoverlays();
 
 	/* Raise order is the priority contract: always-on-top clients, bars and
 	 * trays, override popups, then real fullscreen clients above all shell
@@ -3569,8 +3416,6 @@ setfullscreen(Client *c, int fullscreen)
 	} else
 		resizeclient(c, c->x, c->y, c->w, c->h);
 
-	if (c->isalacritty && !c->isfullscreen)
-		setwindowborder(c->win, alacrittyborder.pixel);
 
 	/* Exception: if the client was in actual fullscreen and we exit out to fake fullscreen
 	 * mode, then the focus would sometimes drift to whichever window is under the mouse cursor
@@ -4121,10 +3966,8 @@ load_themes_toml(const char *user_path, const char *default_path)
 		Client *c;
 		for (m = mons; m; m = m->next)
 			for (c = m->clients; c; c = c->next) {
-				c->bw = c->isalacritty && !c->isfullscreen ? ALACRITTY_BORDER : 0;
+				c->bw = 0;
 				XSetWindowBorderWidth(dpy, c->win, c->bw);
-				if (c->isalacritty)
-					setwindowborder(c->win, alacrittyborder.pixel);
 			}
 	}
 
@@ -4431,8 +4274,6 @@ setup(void)
 	sh = DisplayHeight(dpy, screen);
 	root = RootWindow(dpy, screen);
 	drw = drw_create(dpy, screen, root, sw, sh);
-	drw_clr_create(drw, &alacrittyborder, "#082729");
-	drw_clr_create(drw, &alacrittysharedborder, "#345157");
 	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
 	lrpad = drw->fonts->h;

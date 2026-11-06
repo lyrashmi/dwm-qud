@@ -70,13 +70,7 @@ cat >"$bin/fc-match" <<'EOF'
 family=${3:-}
 family=${family%:charset=20-7e}
 case $family in
-'MesloLGS Nerd Font Mono')
-	if [ "${DWM_TEST_FONT_DEFAULT_ALIAS:-0}" = 1 ]; then
-		printf '%s\n' 'MesloLGS NF'
-	else
-		printf '%s\n' "$family"
-	fi
-	;;
+'Source Code Pro') printf '%s\n' "$family" ;;
 Inter | 'Noto Sans') printf '%s\n' "$family" ;;
 *) printf '%s\n' 'Fallback Sans' ;;
 esac
@@ -101,7 +95,7 @@ run_font_relative_xdg() {
 status=$(run_font status)
 grep -Fqx $'appearance-font-action-protocol\t1\t0' <<<"$status"
 grep -Fqx $'provider\tfont\tavailable\tuser-session\tManaged shell font and text scale' <<<"$status"
-grep -Fqx $'selection\tavailable\tMesloLGS Nerd Font Mono\t1.00\tManaged shell font defaults are active' <<<"$status"
+grep -Fqx $'selection\tavailable\tSource Code Pro\t1.00\tManaged shell font defaults are active' <<<"$status"
 grep -Fqx $'preview\tnone\t\t\t\t0\tNo font preview is active' <<<"$status"
 run_font mutation-ready
 ln -sfn "$work/mv-without-exchange-options" "$bin/mv"
@@ -121,7 +115,7 @@ grep -Fqx 'Atomic file exchange is unavailable on the font configuration filesys
 ln -sfn "$real_mv" "$bin/mv"
 
 relative_status=$(run_font_relative_xdg status)
-grep -Fqx $'selection\tavailable\tMesloLGS Nerd Font Mono\t1.00\tManaged shell font defaults are active' \
+grep -Fqx $'selection\tavailable\tSource Code Pro\t1.00\tManaged shell font defaults are active' \
 	<<<"$relative_status"
 run_font_relative_xdg apply Inter 1.10 >/dev/null
 grep -Fqx $'family\tInter' "$home/.config/dwm-titus/font.conf"
@@ -131,20 +125,13 @@ run_font_relative_xdg reset >/dev/null
 run_font preview preview-absent-baseline 30 Inter 1.25 >/dev/null
 unlink "$font_config"
 status=$(run_font status)
-grep -Fq $'preview\tfailed\tpreview-absent-baseline\tMesloLGS Nerd Font Mono\t1.00\t0\t' \
+grep -Fq $'preview\tfailed\tpreview-absent-baseline\tSource Code Pro\t1.00\t0\t' \
 	<<<"$status"
 run_font revert preview-absent-baseline >"$work/absent-revert.out"
 grep -Fqx $'result\trevert' "$work/absent-revert.out"
 [[ ! -e $font_config ]]
 [[ ! -e $state/dwm-titus/appearance/font/preview.current ]]
 
-export DWM_TEST_FONT_DEFAULT_ALIAS=1
-status=$(run_font status)
-grep -Fqx $'selection\tavailable\tMesloLGS Nerd Font Mono\t1.00\tManaged shell font defaults are active' <<<"$status"
-run_font apply 'MesloLGS Nerd Font Mono' 1.00 >/dev/null
-grep -Fqx $'family\tMesloLGS Nerd Font Mono' "$config/dwm-titus/font.conf"
-run_font reset >/dev/null
-unset DWM_TEST_FONT_DEFAULT_ALIAS
 
 if run_font apply Missing 1.00 2>"$work/missing.err"; then
 	printf 'Uninstalled font selection unexpectedly succeeded\n' >&2
@@ -606,7 +593,7 @@ run_font abandon preview-mode-external >/dev/null
 
 printf '%s\nfamily\tInter\nscale\t9.00\n' $'appearance-font-protocol\t1\t0' >"$font_config"
 status=$(run_font status)
-grep -Fqx $'selection\tpartial\tMesloLGS Nerd Font Mono\t1.00\tFont configuration is malformed; safe shell defaults remain active' <<<"$status"
+grep -Fqx $'selection\tpartial\tSource Code Pro\t1.00\tFont configuration is malformed; safe shell defaults remain active' <<<"$status"
 
 run_font reset >"$work/reset.out"
 grep -Fqx $'result\treset' "$work/reset.out"
@@ -614,7 +601,7 @@ grep -Fqx $'result\treset' "$work/reset.out"
 
 printf '%04097d' 0 >"$font_config"
 status=$(run_font status)
-grep -Fqx $'selection\tpartial\tMesloLGS Nerd Font Mono\t1.00\tFont configuration is too large; safe shell defaults remain active' <<<"$status"
+grep -Fqx $'selection\tpartial\tSource Code Pro\t1.00\tFont configuration is too large; safe shell defaults remain active' <<<"$status"
 if run_font mutation-ready; then
 	printf 'Oversized font configuration unexpectedly allowed mutation\n' >&2
 	exit 1

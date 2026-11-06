@@ -1061,7 +1061,7 @@ Scope {
         root.fontDetail = detail;
         root.fontMutationReady = false;
         // Keep the last valid family and scale through a transient helper
-        // failure. On first launch Theme already holds the safe Meslo/100%
+        // failure. On first launch Theme already holds the safe Source Code Pro/100%
         // defaults, so repainting is neither necessary nor desirable.
         if (!fontStatusRetryTimer.running && root.fontStatusRetryAttempts < 3) {
             root.fontStatusRetryAttempts++;

@@ -69,7 +69,7 @@ for cmd in xkbset quickshell picom feh xsettingsd bwrap dex amixer jq bluetoothc
 done
 cat >"$work/bin/fc-list" <<'SCRIPT'
 #!/bin/sh
-printf '%s\n' 'MesloLGS Nerd Font' 'Noto Color Emoji'
+printf '%s\n' 'Source Code Pro' 'Noto Color Emoji' 'SauceCodePro Nerd Font' 'ITC Serif Gothic Heavy'
 SCRIPT
 chmod +x "$work/bin/fc-list"
 env HOME="$work/home" PATH="$work/bin" "$BASH_BIN" "$ROOT_DIR/scripts/check-deps.sh" >"$work/check-ok"

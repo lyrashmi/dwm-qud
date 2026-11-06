@@ -14,10 +14,10 @@ static const int topbar             = 1;        /* 0 means bottom bar */
 #define ICONSIZE                      17        /* icon size */
 #define ICONSPACING                   5         /* space between icon and title */
 #define SHOWWINICON                   1         /* 0 means no winicon */
-/* Fonts: install.sh downloads MesloLGS Nerd Font and installs google-noto-color-emoji-fonts with dnf. */
-static const char dmenufont[]       = "MesloLGS Nerd Font Mono:size=12";
+/* Fonts: Source Code Pro for interface text; SauceCodePro Nerd Font for terminal and icon glyphs. */
+static const char dmenufont[]       = "Source Code Pro:size=12";
 /* Fonts for the bar */
-static const char *fonts[]          = { "MesloLGS Nerd Font Mono:size=12:antialias=true:autohint=true", "NotoColorEmoji:pixelsize=14:antialias=true:autohint=true" };
+static const char *fonts[]          = { "Source Code Pro:size=12:antialias=true:autohint=true", "SauceCodePro Nerd Font:size=12:antialias=true:autohint=true", "NotoColorEmoji:pixelsize=14:antialias=true:autohint=true" };
 
 
 

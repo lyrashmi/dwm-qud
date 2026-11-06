@@ -33,7 +33,7 @@ chmod +x "$work/bin/pkg-config"
 # Mock fc-list
 cat >"$work/bin/fc-list" <<'SH'
 #!/bin/sh
-printf '%s\n' 'MesloLGS Nerd Font' 'Noto Color Emoji'
+printf '%s\n' 'Source Code Pro' 'Noto Color Emoji' 'SauceCodePro Nerd Font' 'ITC Serif Gothic Heavy'
 SH
 chmod +x "$work/bin/fc-list"
 
@@ -152,7 +152,7 @@ if ! grep -Fq "Automated dependency installer not found." <<<"$output"; then
 	exit 1
 fi
 
-# 6. Interactive mode when only Meslo Nerd Font is missing (non-package dependency)
+# 6. Interactive mode when only SauceCodePro Nerd Font is missing (non-package dependency)
 cat >"$work/bin/startx" <<'SH'
 #!/bin/sh
 exit 0
@@ -169,7 +169,7 @@ rm -f "$DWM_TEST_INSTALLER_LOG"
 
 cat >"$work/bin/fc-list" <<'SH'
 #!/bin/sh
-printf '%s\n' 'Noto Color Emoji'
+printf '%s\n' 'Source Code Pro' 'Noto Color Emoji' 'ITC Serif Gothic Heavy'
 SH
 chmod +x "$work/bin/fc-list"
 
@@ -178,19 +178,19 @@ output=$(printf '\n' | env HOME="$work/home" PATH="$work/bin" \
 	bash "$CHECK_DEPS" --interactive || true)
 
 if [ -f "$DWM_TEST_INSTALLER_LOG" ]; then
-	echo "FAIL: package-only updater was invoked when only Meslo was missing" >&2
+	echo "FAIL: package-only updater was invoked when only SauceCodePro was missing" >&2
 	exit 1
 fi
 if grep -Fq "Missing dependencies found, install now?" <<<"$output"; then
-	echo "FAIL: should not offer package repair when only Meslo is missing" >&2
+	echo "FAIL: should not offer package repair when only SauceCodePro is missing" >&2
 	exit 1
 fi
-if ! grep -Fq "Meslo" <<<"$output"; then
-	echo "FAIL: expected Meslo font guidance" >&2
+if ! grep -Fq "SauceCodePro Nerd Font" <<<"$output"; then
+	echo "FAIL: expected SauceCodePro font guidance" >&2
 	exit 1
 fi
 
-# 7. Interactive mode when both package and Meslo font are missing (mixed failure)
+# 7. Interactive mode when both package and SauceCodePro Nerd Font are missing (mixed failure)
 rm -f "$work/bin/startx"
 rm -f "$DWM_TEST_INSTALLER_LOG"
 cat >"$work/bin/dwm-desktop-update" <<'SH'
@@ -220,14 +220,14 @@ if [ ! -f "$DWM_TEST_INSTALLER_LOG" ]; then
 	echo "FAIL: installer was not invoked on mixed failure" >&2
 	exit 1
 fi
-if ! grep -Fq "Meslo" <<<"$output"; then
-	echo "FAIL: expected Meslo guidance on mixed failure" >&2
+if ! grep -Fq "SauceCodePro Nerd Font" <<<"$output"; then
+	echo "FAIL: expected SauceCodePro guidance on mixed failure" >&2
 	exit 1
 fi
 # 8. Interactive mode when repair succeeds but dependency remains missing
 cat >"$work/bin/fc-list" <<'SH'
 #!/bin/sh
-printf '%s\n' 'MesloLGS Nerd Font' 'Noto Color Emoji'
+printf '%s\n' 'Source Code Pro' 'Noto Color Emoji' 'SauceCodePro Nerd Font' 'ITC Serif Gothic Heavy'
 SH
 chmod +x "$work/bin/fc-list"
 

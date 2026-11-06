@@ -151,14 +151,6 @@ gtk_available() {
 font_family_matches() {
 	local requested=$1 resolved=$2
 	[[ ${resolved,,} == "${requested,,}" ]] && return 0
-	case ${requested,,}:${resolved,,} in
-	'meslolgs nerd font mono:meslolgs nerd font' | \
-		'meslolgs nerd font mono:meslolgs nf' | \
-		'meslolgs nerd font:meslolgs nerd font mono' | \
-		'meslolgs nerd font:meslolgs nf' | \
-		'meslolgs nf:meslolgs nerd font mono' | \
-		'meslolgs nf:meslolgs nerd font') return 0 ;;
-	esac
 	return 1
 }
 

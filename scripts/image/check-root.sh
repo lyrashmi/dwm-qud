@@ -85,7 +85,7 @@ for command in maim dwm; do
 	fi
 done
 flatpak --system info it.mijorus.gearlever >/dev/null
-[[ $(fc-match -f '%{family}' 'MesloLGS Nerd Font Mono') == *Meslo* ]]
+[[ $(fc-match -f '%{family}' 'SauceCodePro Nerd Font') == *SauceCodePro* ]]
 [[ -n $(find /boot -maxdepth 1 -name 'vmlinuz-*' -print -quit) ]]
 [[ -x /usr/libexec/polkit-mate-authentication-agent-1 ]]
 [[ -d /usr/share/themes/Nordic && -f /usr/share/xsessions/dwm.desktop ]]

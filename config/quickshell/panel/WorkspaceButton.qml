@@ -12,8 +12,8 @@ Rectangle {
 
     signal clicked()
 
-    Layout.preferredWidth: Theme.workspaceButtonSize
-    Layout.preferredHeight: Theme.workspaceButtonSize
+    Layout.preferredWidth: Theme.barWorkspaceButtonSize
+    Layout.preferredHeight: Theme.barWorkspaceButtonSize
 
     radius: 0
     clip: true
@@ -48,9 +48,9 @@ Rectangle {
     // Marks desktops that contain windows.
     Rectangle {
         visible: root.occupied
-        x: Theme.scaledSize(3)
-        y: Theme.scaledSize(3)
-        width: Theme.scaledSize(4)
+        x: Theme.panelScaledSize(3)
+        y: Theme.panelScaledSize(3)
+        width: Theme.panelScaledSize(4)
         height: width
 
         color: root.selected ? Theme.controlSelectedText
@@ -70,7 +70,7 @@ Rectangle {
             : root.occupied ? Theme.textStrong : Theme.textMuted
 
         font.family: Theme.fontFamily
-        font.pixelSize: Theme.panelFontSize
+        font.pixelSize: Theme.barFontSize
         font.bold: root.selected
 
         verticalAlignment: Text.AlignVCenter

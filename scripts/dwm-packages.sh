@@ -104,7 +104,7 @@ dwm_packages() {
 		printf '%s\n' qt6ct qt5ct
 		;;
 	fedora:fonts)
-		printf '%s\n' google-noto-color-emoji-fonts google-noto-sans-mono-fonts
+		printf '%s\n' adobe-source-code-pro-fonts google-noto-color-emoji-fonts google-noto-sans-mono-fonts
 		;;
 	fedora:qml-development)
 		printf '%s\n' qt6-qtdeclarative-devel

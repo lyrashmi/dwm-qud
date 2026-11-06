@@ -48,9 +48,9 @@ fedora)
 esac
 
 BG_DIR="$HOME/Pictures/backgrounds"
-MESLO_VERSION="3.4.0"
-MESLO_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v${MESLO_VERSION}/Meslo.zip"
-MESLO_SHA256="13b502ac8c2bd9d3161018064560e23cd42b175bb730780a270975265a19ad57"
+SOURCECODEPRO_VERSION="3.4.0"
+SOURCECODEPRO_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v${SOURCECODEPRO_VERSION}/SourceCodePro.zip"
+SOURCECODEPRO_SHA256="f8abc5576d1761b8c2a7c03aaff54a692af109f12f2cde641320c8d2f4c5ad53"
 NORDIC_THEME_URL="https://github.com/EliverLara/Nordic.git"
 NORDIC_THEME_REF="master"
 ARCH="$(uname -m)"
@@ -361,37 +361,45 @@ confirm_install_summary() {
 	esac
 }
 
-install_meslo_nerd_font() {
-	local font_dir="$HOME/.local/share/fonts/Meslo"
-	local tmp_dir
-	local archive
+install_source_code_pro_nerd_font() {
+	local font_dir="$HOME/.local/share/fonts/SauceCodePro"
+	local tmp_dir archive
 
-	if fc-list 2>/dev/null | command grep -Eqi 'MesloLGS (NF|Nerd Font)'; then
-		ok "MesloLGS Nerd Font is already installed."
-		return
+	if fc-list --format '%{family}\n' 2>/dev/null |
+		awk -F, '{ for (i = 1; i <= NF; i++) { gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i); if ($i == "SauceCodePro Nerd Font") found = 1 } } END { exit !found }'; then
+		ok "SauceCodePro Nerd Font is already installed."
+	else
+		tmp_dir="$(mktemp -d)"
+		archive="$tmp_dir/SourceCodePro.zip"
+
+		info "Downloading Source Code Pro Nerd Font v${SOURCECODEPRO_VERSION}..."
+		if ! curl --fail --location --show-error --silent "$SOURCECODEPRO_URL" --output "$archive"; then
+			rm -rf "$tmp_dir"
+			err "Failed to download Source Code Pro Nerd Font."
+			return 1
+		fi
+
+		if ! printf '%s  %s\n' "$SOURCECODEPRO_SHA256" "$archive" | sha256sum --check --status; then
+			rm -rf "$tmp_dir"
+			err "Source Code Pro Nerd Font checksum verification failed."
+			return 1
+		fi
+
+		mkdir -p "$font_dir"
+		unzip -j -q -o "$archive" '*.ttf' -d "$font_dir"
+		rm -rf "$tmp_dir"
+		fc-cache -f "$font_dir" >/dev/null 2>&1
+		ok "SauceCodePro Nerd Font installed."
 	fi
 
-	tmp_dir="$(mktemp -d)"
-	archive="$tmp_dir/Meslo.zip"
-
-	info "Downloading Meslo Nerd Font v${MESLO_VERSION}..."
-	if ! curl --fail --location --show-error --silent "$MESLO_URL" --output "$archive"; then
-		rm -rf "$tmp_dir"
-		err "Failed to download Meslo Nerd Font."
+	local heading_font="$REPO_DIR/assets/fonts/TC-Serif-Gothic-Heavy-LT.otf"
+	if [[ ! -f "$heading_font" ]]; then
+		err "Bundled heading font is missing: $heading_font"
 		return 1
 	fi
-
-	if ! printf '%s  %s\n' "$MESLO_SHA256" "$archive" | sha256sum --check --status; then
-		rm -rf "$tmp_dir"
-		err "Meslo Nerd Font checksum verification failed."
-		return 1
-	fi
-
-	mkdir -p "$font_dir"
-	unzip -j -q -o "$archive" '*.ttf' -d "$font_dir"
-	rm -rf "$tmp_dir"
-	fc-cache -f "$font_dir" >/dev/null 2>&1
-	ok "MesloLGS Nerd Font installed."
+	install -Dm644 "$heading_font" "$HOME/.local/share/fonts/TC-Serif-Gothic-Heavy-LT.otf"
+	fc-cache -f "$HOME/.local/share/fonts" >/dev/null 2>&1
+	ok "TC Serif Gothic LT Heavy installed."
 }
 
 install_nordic_gtk_theme() {
@@ -666,7 +674,7 @@ if install_recommended_profile; then
 	info "Installing fonts..."
 	FONT_DIR="$HOME/.local/share/fonts"
 	mkdir -p "$FONT_DIR"
-	install_meslo_nerd_font
+	install_source_code_pro_nerd_font
 	ok "Fonts installed."
 fi
 

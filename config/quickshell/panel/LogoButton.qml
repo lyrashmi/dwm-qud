@@ -7,16 +7,18 @@ PanelPill {
 
     signal activated
 
-    Layout.preferredWidth: Theme.pillHeight
-    Layout.preferredHeight: Theme.pillHeight
+    panelScaled: true
+
+    Layout.preferredWidth: Theme.barPillHeight
+    Layout.preferredHeight: Theme.barPillHeight
     hovered: logoMouse.containsMouse
 
     Image {
         id: logoImage
 
         anchors.centerIn: parent
-        width: Theme.scaledSize(24)
-        height: Theme.scaledSize(25.2)
+        width: Theme.panelScaledSize(24)
+        height: Theme.panelScaledSize(25.2)
         source: Qt.resolvedUrl("../assets/ctt_logo.png")
         fillMode: Image.PreserveAspectFit
         asynchronous: true
@@ -29,7 +31,7 @@ PanelPill {
         visible: logoImage.status === Image.Error
         text: "CTT"
         color: Theme.accent
-        font.pixelSize: Theme.tinyFontSize
+        font.pixelSize: Theme.barTinyFontSize
         font.bold: true
     }
 

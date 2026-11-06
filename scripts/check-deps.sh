@@ -217,8 +217,10 @@ echo ""
 
 # ── Fonts ───────────────────────────────────────────────
 echo "Fonts:"
-check_font_any --non-package "MesloLGS Nerd Font (NF compatible)" "MesloLGS Nerd Font" "MesloLGS Nerd Font Mono" "MesloLGS NF"
+check_font "Source Code Pro" "Source Code Pro"
 check_font "Noto Color Emoji"
+check_font --non-package "SauceCodePro Nerd Font" "SauceCodePro Nerd Font"
+check_font --non-package "TC Serif Gothic LT Heavy" "ITC Serif Gothic Heavy"
 echo ""
 
 # ── Session entry ───────────────────────────────────────
@@ -256,8 +258,8 @@ else
 	fi
 	if [ $MISSING_FONTS -gt 0 ]; then
 		echo ""
-		echo "Non-package dependencies (Meslo Nerd Font):"
-		echo "  Meslo is installed via the automated installer rather than standard packages."
+		echo "Installer-managed fonts:"
+		echo "  SauceCodePro Nerd Font and TC Serif Gothic LT Heavy are installed by ./install.sh."
 		echo "  Run: ./install.sh   (automated install includes font setup)"
 	else
 		echo "  Run: ./install.sh   (automated install)"
@@ -297,8 +299,8 @@ else
 					if grep -Fq "Package suggestions from the shared dependency map:" <<<"$recheck_output" ||
 						grep -Eq '\(missing\)|missing pam_gnome_keyring|Noto Color Emoji' <<<"$recheck_output"; then
 						printf "\n${RED}Required dependencies are still missing after repair.${NC}\n"
-					elif [ $MISSING_FONTS -gt 0 ] || grep -Fq "Meslo" <<<"$recheck_output"; then
-						printf "\n${YELLOW}Package dependencies installed, but Meslo Nerd Font is still missing.${NC}\n"
+					elif [ $MISSING_FONTS -gt 0 ] || grep -Fq "SauceCodePro Nerd Font" <<<"$recheck_output"; then
+						printf "\n${YELLOW}Package dependencies installed, but installer-managed fonts are still missing.${NC}\n"
 						printf "Run: ./install.sh (automated install includes font setup)\n"
 					else
 						printf "\n${RED}Required dependencies are still missing after repair.${NC}\n"

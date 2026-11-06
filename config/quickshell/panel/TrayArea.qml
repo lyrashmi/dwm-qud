@@ -10,7 +10,7 @@ RowLayout {
         return item.id !== "blueman" && item.id !== "blueman-applet";
     })
     visible: visibleItems.length > 0
-    spacing: Theme.compactSpacing
+    spacing: Theme.barCompactSpacing
 
     Repeater {
         model: root.visibleItems

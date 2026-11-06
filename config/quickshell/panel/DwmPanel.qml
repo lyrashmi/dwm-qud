@@ -46,9 +46,9 @@ PanelWindow {
     required property var powerMenuModel
     required property bool primaryPanel
 
-    implicitHeight: Theme.panelHeight
+    implicitHeight: Theme.barPanelHeight
     color: Theme.barBackground
-    exclusiveZone: Theme.panelHeight
+    exclusiveZone: Theme.barPanelHeight
     aboveWindows: root.state.fullscreenMonitorIndexes.indexOf(
         root.state.screenIndex(root.screen)) === -1
 
@@ -81,9 +81,9 @@ PanelWindow {
 
         RowLayout {
             anchors.fill: parent
-            anchors.leftMargin: Theme.panelGap
-            anchors.rightMargin: Theme.panelGap
-            spacing: Theme.panelGap
+            anchors.leftMargin: Theme.barPanelGap
+            anchors.rightMargin: Theme.barPanelGap
+            spacing: Theme.barPanelGap
 
             Item {
                 Layout.fillWidth: true
@@ -95,7 +95,7 @@ PanelWindow {
                     anchors.verticalCenter: parent.verticalCenter
                     width: Math.min(implicitWidth, parent.width)
                     height: parent.height
-                    spacing: Theme.panelGap
+                    spacing: Theme.barPanelGap
 
                     LogoButton {
                         id: logoButton
@@ -106,15 +106,16 @@ PanelWindow {
                     }
 
                     PanelPill {
+                        panelScaled: true
                         visible: root.panelSettingsModel.widgetEnabled("workspaces")
-                        Layout.preferredWidth: workspaceRow.implicitWidth + 8
-                        Layout.preferredHeight: Theme.pillHeight
+                        Layout.preferredWidth: workspaceRow.implicitWidth + Theme.panelScaledSize(8)
+                        Layout.preferredHeight: Theme.barPillHeight
 
                         RowLayout {
                             id: workspaceRow
 
                             anchors.centerIn: parent
-                            spacing: 1
+                            spacing: Theme.panelScaledSize(1)
 
                             Repeater {
                                 model: root.state.workspaceIndexes(root.screen)
@@ -133,8 +134,9 @@ PanelWindow {
                     }
 
                     PanelPill {
-                        Layout.preferredWidth: Math.min(activeTitle.implicitWidth + Theme.pillHorizontalPadding * 2, 260)
-                        Layout.preferredHeight: Theme.pillHeight
+                        panelScaled: true
+                        Layout.preferredWidth: Math.min(activeTitle.implicitWidth + Theme.barPillHorizontalPadding * 2, Theme.panelScaledSize(260))
+                        Layout.preferredHeight: Theme.barPillHeight
                         outlined: false
 
                         Item {
@@ -145,8 +147,8 @@ PanelWindow {
                                 0, titleViewport.width - activeTitle.implicitWidth)
 
                             anchors.fill: parent
-                            anchors.leftMargin: Theme.pillHorizontalPadding
-                            anchors.rightMargin: Theme.pillHorizontalPadding
+                            anchors.leftMargin: Theme.barPillHorizontalPadding
+                            anchors.rightMargin: Theme.barPillHorizontalPadding
                             clip: true
 
                             UiText {
@@ -202,8 +204,9 @@ PanelWindow {
             }
 
             PanelPill {
-                Layout.preferredWidth: clockLabel.implicitWidth + Theme.pillHorizontalPadding * 2
-                Layout.preferredHeight: Theme.pillHeight
+                panelScaled: true
+                Layout.preferredWidth: clockLabel.implicitWidth + Theme.barPillHorizontalPadding * 2
+                Layout.preferredHeight: Theme.barPillHeight
                 outlined: false
 
                 UiText {
@@ -226,10 +229,11 @@ PanelWindow {
                 labelColor: "#40a4b9"
                 visible: root.updateCenterModel.shouldShow()
                 leadingIcon: "../assets/update-center/dwm-update-center.png"
-                leadingIconSize: Theme.scaledSize(14)
+                leadingIconSize: Theme.panelScaledSize(14)
                 label: root.updateCenterModel.totalUpdates > 0
                     ? root.updateCenterModel.totalUpdates.toString() : ""
-                labelSpacing: 4
+                panelScaled: true
+                labelSpacing: Theme.panelScaledSize(4)
                 accessibleDescription: root.updateCenterModel.totalUpdates > 0
                     ? root.updateCenterModel.totalUpdates.toString() + " updates available"
                     : "Updates are current"
@@ -243,7 +247,7 @@ PanelWindow {
 
                 RowLayout {
                     anchors.fill: parent
-                    spacing: Theme.panelGap
+                    spacing: Theme.barPanelGap
 
                     Item { Layout.fillWidth: true }
 
@@ -251,9 +255,10 @@ PanelWindow {
                         model: root.state.statusSegments
 
                         delegate: PanelPill {
+                            panelScaled: true
                             required property string modelData
-                            Layout.preferredWidth: statusLabel.implicitWidth + Theme.pillHorizontalPadding * 2
-                            Layout.preferredHeight: Theme.pillHeight
+                            Layout.preferredWidth: statusLabel.implicitWidth + Theme.barPillHorizontalPadding * 2
+                            Layout.preferredHeight: Theme.barPillHeight
                             outlined: true
 
                             UiText {
@@ -273,11 +278,12 @@ PanelWindow {
                     }
 
                     PanelPill {
+                        panelScaled: true
                         id: keyboardPill
                         visible: root.panelSettingsModel.widgetEnabled("keyboard-layout")
                             && root.state.keyboardGroupCount > 1
-                        Layout.preferredWidth: keyboardLabel.implicitWidth + Theme.compactWidgetHorizontalPadding * 2
-                        Layout.preferredHeight: Theme.compactWidgetSize
+                        Layout.preferredWidth: keyboardLabel.implicitWidth + Theme.barCompactWidgetHorizontalPadding * 2
+                        Layout.preferredHeight: Theme.barCompactWidgetSize
                         hovered: keyboardMouse.containsMouse
 
                         UiText {
@@ -285,7 +291,7 @@ PanelWindow {
                             anchors.centerIn: parent
                             text: root.state.keyboardLabel(root.state.keyboardGroup)
                             color: Theme.textStrong
-                            font.pixelSize: Theme.panelFontSize
+                            font.pixelSize: Theme.barFontSize
                         }
 
                         MouseArea {
@@ -311,27 +317,28 @@ PanelWindow {
                     }
 
                     PanelPill {
+                        panelScaled: true
                         id: batteryPill
                         visible: root.powerModel.batteryAvailable
-                        Layout.preferredWidth: batteryRow.implicitWidth + Theme.compactWidgetHorizontalPadding * 2
-                        Layout.preferredHeight: Theme.compactWidgetSize
+                        Layout.preferredWidth: batteryRow.implicitWidth + Theme.barCompactWidgetHorizontalPadding * 2
+                        Layout.preferredHeight: Theme.barCompactWidgetSize
                         hovered: batteryMouse.containsMouse
 
                         RowLayout {
                             id: batteryRow
                             anchors.centerIn: parent
-                            spacing: Theme.compactSpacing
+                            spacing: Theme.barCompactSpacing
 
                             IconText {
                                 text: root.batteryIcon(root.powerModel.batteryPercent, root.powerModel.batteryStatus)
                                 color: Theme.textStrong
-                                font.pixelSize: Theme.scaledFontSize(14 * 1.1, 8)
+                                font.pixelSize: Theme.panelScaledFontSize(14 * 1.1, 8)
                             }
 
                             UiText {
                                 text: root.powerModel.batteryPercent.toString() + "%"
                                 color: Theme.textStrong
-                                font.pixelSize: Theme.panelFontSize
+                                font.pixelSize: Theme.barFontSize
                             }
                         }
 
@@ -343,21 +350,22 @@ PanelWindow {
                     }
 
                     PanelPill {
+                        panelScaled: true
                         visible: root.panelSettingsModel.widgetEnabled("bluetooth")
-                        Layout.preferredWidth: bluetoothRow.implicitWidth + Theme.compactWidgetHorizontalPadding * 2
-                        Layout.preferredHeight: Theme.compactWidgetSize
+                        Layout.preferredWidth: bluetoothRow.implicitWidth + Theme.barCompactWidgetHorizontalPadding * 2
+                        Layout.preferredHeight: Theme.barCompactWidgetSize
                         active: root.bluetoothModel.visible
                         hovered: bluetoothMouse.containsMouse
 
                         RowLayout {
                             id: bluetoothRow
                             anchors.centerIn: parent
-                            spacing: Theme.compactSpacing
+                            spacing: Theme.barCompactSpacing
 
                             IconText {
                                 text: "󰂯"
                                 color: Theme.textStrong
-                                font.pixelSize: Theme.scaledFontSize(14 * 0.9, 8)
+                                font.pixelSize: Theme.panelScaledFontSize(14 * 0.9, 8)
                             }
                         }
 
@@ -374,22 +382,23 @@ PanelWindow {
                     }
 
                     PanelPill {
+                        panelScaled: true
                         visible: root.panelSettingsModel.widgetEnabled("network")
-                        Layout.preferredWidth: networkRow.implicitWidth + Theme.networkWidgetHorizontalPadding * 2
-                        Layout.preferredHeight: Theme.compactWidgetSize
+                        Layout.preferredWidth: networkRow.implicitWidth + Theme.barNetworkWidgetHorizontalPadding * 2
+                        Layout.preferredHeight: Theme.barCompactWidgetSize
                         active: root.networkModel.visible
                         hovered: networkMouse.containsMouse
 
                         RowLayout {
                             id: networkRow
                             anchors.centerIn: parent
-                            spacing: Theme.compactSpacing
+                            spacing: Theme.barCompactSpacing
 
                             IconText {
                                 text: root.networkModel.statusText.indexOf("offline") >= 0
                                     || root.networkModel.statusText.indexOf("unavailable") >= 0 ? "󰤭" : "󰤨"
                                 color: Theme.textStrong
-                                font.pixelSize: Theme.scaledFontSize(14 * 1.2, 8)
+                                font.pixelSize: Theme.panelScaledFontSize(14 * 1.2, 8)
                             }
                         }
 
@@ -406,28 +415,29 @@ PanelWindow {
                     }
 
                     PanelPill {
+                        panelScaled: true
                         visible: root.panelSettingsModel.widgetEnabled("volume")
-                        Layout.preferredWidth: volumeRow.implicitWidth + Theme.compactWidgetHorizontalPadding * 2
-                        Layout.preferredHeight: Theme.compactWidgetSize
+                        Layout.preferredWidth: volumeRow.implicitWidth + Theme.barCompactWidgetHorizontalPadding * 2
+                        Layout.preferredHeight: Theme.barCompactWidgetSize
                         active: root.controlsModel.visible
                         hovered: controlsMouse.containsMouse
 
                         RowLayout {
                             id: volumeRow
                             anchors.centerIn: parent
-                            spacing: Theme.compactSpacing
+                            spacing: Theme.barCompactSpacing
 
                             IconText {
                                 text: root.controlsModel.volumeMuted ? "󰝟" : "󰕾"
                                 color: Theme.textStrong
-                                font.pixelSize: Theme.scaledFontSize(14 * 1.5, 8)
+                                font.pixelSize: Theme.panelScaledFontSize(14 * 1.5, 8)
                             }
 
                             UiText {
                                 visible: root.controlsModel.volumeText !== "VOL unavailable"
                                 text: root.controlsModel.volumePercent.toString() + "%"
                                 color: Theme.textStrong
-                                font.pixelSize: Theme.panelFontSize
+                                font.pixelSize: Theme.barFontSize
                             }
                         }
 
@@ -452,9 +462,10 @@ PanelWindow {
                     }
 
                     PanelPill {
+                        panelScaled: true
                         visible: root.panelSettingsModel.widgetEnabled("power")
-                        Layout.preferredWidth: Theme.pillHeight
-                        Layout.preferredHeight: Theme.pillHeight
+                        Layout.preferredWidth: Theme.barPillHeight
+                        Layout.preferredHeight: Theme.barPillHeight
                         active: root.powerMenuModel.visible
                         hovered: powerMouse.containsMouse
 
@@ -462,7 +473,7 @@ PanelWindow {
                             anchors.centerIn: parent
                             text: "󰐥"
                             color: Theme.textStrong
-                            font.pixelSize: Theme.scaledFontSize(14 * 1.08, 8)
+                            font.pixelSize: Theme.panelScaledFontSize(14 * 1.08, 8)
                         }
 
                         MouseArea {
@@ -486,7 +497,7 @@ PanelWindow {
         anchorWindow: root
         anchorItem: logoButton
         label: "Control Center"
-        anchorY: Theme.panelHeight
+        anchorY: Theme.barPanelHeight
     }
 
     PanelTooltip {
@@ -494,7 +505,7 @@ PanelWindow {
         anchorWindow: root
         anchorItem: batteryPill
         label: root.powerModel.batteryPercent.toString() + "% - " + root.powerModel.batteryStatus
-        anchorY: Theme.panelHeight
+        anchorY: Theme.barPanelHeight
         rightAligned: true
     }
 
@@ -503,7 +514,7 @@ PanelWindow {
         anchorWindow: root
         anchorItem: keyboardMouse
         label: root.state.keyboardSummary() + " - click: next layout, right-click: input settings"
-        anchorY: Theme.panelHeight
+        anchorY: Theme.barPanelHeight
         rightAligned: true
     }
 
@@ -512,7 +523,7 @@ PanelWindow {
         anchorWindow: root
         anchorItem: bluetoothMouse
         label: root.bluetoothModel.statusText
-        anchorY: Theme.panelHeight
+        anchorY: Theme.barPanelHeight
         rightAligned: true
     }
 
@@ -521,7 +532,7 @@ PanelWindow {
         anchorWindow: root
         anchorItem: networkMouse
         label: root.networkModel.statusText
-        anchorY: Theme.panelHeight
+        anchorY: Theme.barPanelHeight
         rightAligned: true
     }
 
@@ -530,7 +541,7 @@ PanelWindow {
         anchorWindow: root
         anchorItem: controlsMouse
         label: root.controlsModel.volumeDisplayText
-        anchorY: Theme.panelHeight
+        anchorY: Theme.barPanelHeight
         rightAligned: true
     }
 
@@ -539,7 +550,7 @@ PanelWindow {
         anchorWindow: root
         anchorItem: powerMouse
         label: "Power"
-        anchorY: Theme.panelHeight
+        anchorY: Theme.barPanelHeight
         rightAligned: true
     }
 }

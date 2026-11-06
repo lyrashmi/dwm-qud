@@ -154,6 +154,7 @@ bluebird-gtk3-theme
 qt6ct
 qt5ct
 google-noto-color-emoji-fonts
+adobe-source-code-pro-fonts
 google-noto-sans-mono-fonts
 NetworkManager
 NetworkManager-wifi
@@ -237,7 +238,7 @@ chown -R "$target_user:$target_group" "$target_repo_dir"
 install -m 0440 /dev/null "$install_sudoers"
 printf '%s ALL=(ALL) NOPASSWD: ALL\n' "$target_user" > "$install_sudoers"
 
-# The complete desktop needs the recommended profile's verified Meslo font
+# The complete desktop needs the recommended profile's verified Source Code Pro fonts
 # and Gear Lever setup. Do not query the installer's host AccountsService from
 # this target chroot: it cannot resolve the newly created target user. This
 # private provisioning bus does not change the installed session's policy.

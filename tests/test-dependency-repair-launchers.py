@@ -47,7 +47,7 @@ class DependencyLaunchers(unittest.TestCase):
                 p.chmod(0o755)
             # The dispatcher fixture must not depend on the desktop user's fonts.
             fonts = tools / "fc-list"
-            fonts.write_text("#!/bin/sh\nprintf '%s\\n' 'MesloLGS Nerd Font' 'Noto Color Emoji'\n")
+            fonts.write_text("#!/bin/sh\nprintf '%s\\n' 'Source Code Pro' 'Noto Color Emoji' 'SauceCodePro Nerd Font' 'ITC Serif Gothic Heavy'\n")
             fonts.chmod(0o755)
             clean_checker = tools / "clean-checker"
             clean_checker.write_text("#!/bin/sh\nexit 0\n")

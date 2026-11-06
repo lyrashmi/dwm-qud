@@ -72,7 +72,7 @@ if [ "${DWM_TEST_FC_LIST_RESULT+x}" = x ]; then
 	case $DWM_TEST_FC_LIST_RESULT in '') ;; *) printf '\n' ;; esac
 else
 	printf '%s\n' "${DWM_TEST_FC_MATCH_RESULT:-New Font}" \
-		'MesloLGS Nerd Font' 'MesloLGS Nerd Font Mono' 'MesloLGS NF'
+		'SauceCodePro Nerd Font'
 fi
 SH
 
@@ -336,14 +336,14 @@ grep -Fqx "personalize icon Bob's Icons" "$work/theme.calls"
 run_helper apply font 'New Font' | grep -Fqx \
 	'result	apply	font	New Font'
 grep -Fqx 'personalize font New Font' "$work/theme.calls"
-DWM_TEST_FC_MATCH_RESULT='MesloLGS NF' run_helper apply font \
-	'MesloLGS Nerd Font Mono' | grep -Fqx \
-	'result	apply	font	MesloLGS Nerd Font Mono'
-grep -Fqx 'personalize font MesloLGS Nerd Font Mono' "$work/theme.calls"
-DWM_TEST_FC_MATCH_RESULT='MesloLGS NF' run_helper apply font \
-	'meslolgs nerd font mono' | grep -Fqx \
-	'result	apply	font	meslolgs nerd font mono'
-grep -Fqx 'personalize font meslolgs nerd font mono' "$work/theme.calls"
+DWM_TEST_FC_MATCH_RESULT='SauceCodePro Nerd Font' run_helper apply font \
+	'SauceCodePro Nerd Font' | grep -Fqx \
+	'result	apply	font	SauceCodePro Nerd Font'
+grep -Fqx 'personalize font SauceCodePro Nerd Font' "$work/theme.calls"
+DWM_TEST_FC_MATCH_RESULT='SauceCodePro Nerd Font' run_helper apply font \
+	'saucecodepro nerd font' | grep -Fqx \
+	'result	apply	font	saucecodepro nerd font'
+grep -Fqx 'personalize font saucecodepro nerd font' "$work/theme.calls"
 if DWM_TEST_FC_LIST_RESULT='' run_helper apply font 'Symbol Font' \
 	>"$work/symbol-font.out" 2>"$work/symbol-font.err"; then
 	printf 'Font without printable glyph coverage was accepted\n' >&2

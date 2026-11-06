@@ -28,7 +28,7 @@ grep -Eq 'mfact[[:space:]]*=[[:space:]]*0.60;' "$output"
 grep -Eq 'nmaster[[:space:]]*=[[:space:]]*2;' "$output"
 grep -Eq 'resizehints[[:space:]]*=[[:space:]]*0;' "$output"
 grep -Eq '^#define MODKEY[[:space:]]+Mod1Mask$' "$output"
-grep -Fq 'MesloLGS Nerd Font Mono:size=15' "$output"
+grep -Fq 'Source Code Pro:size=15' "$output"
 
 before=$(sha256sum "$output" | awk '{print $1}')
 DWM_REFRESH_RATE=60 \

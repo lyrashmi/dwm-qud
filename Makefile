@@ -350,38 +350,24 @@ install-user-files:
 		echo "  Preserving existing hotkeys and window rules after migration warning."
 	@echo "==> Migrating legacy graphical-session startup..."
 	HOME="${USER_HOME}" XDG_CONFIG_HOME="${XDG_CONFIG_HOME}" scripts/migrate-graphical-session.sh
-	@echo "==> Installing Meslo font aliases..."
+	@echo "==> Installing heading font alias..."
 	mkdir -p ${CFG_DIR}/fontconfig/conf.d
-	if [ ! -f ${CFG_DIR}/fontconfig/conf.d/50-meslolgs-nerd-font-aliases.conf ]; then \
+	rm -f ${CFG_DIR}/fontconfig/conf.d/50-meslolgs-nerd-font-aliases.conf
+	if [ ! -f ${CFG_DIR}/fontconfig/conf.d/50-tc-serif-gothic-alias.conf ]; then \
 		{ \
 			printf '%s\n' '<?xml version="1.0"?>'; \
 			printf '%s\n' '<!DOCTYPE fontconfig SYSTEM "fonts.dtd">'; \
 			printf '%s\n' '<fontconfig>'; \
-			printf '%s\n' '  <alias>'; \
-			printf '%s\n' '    <family>MesloLGS NF</family>'; \
+			printf '%s\n' '  <alias binding="strong">'; \
+			printf '%s\n' '    <family>TC Serif Gothic LT Heavy</family>'; \
 			printf '%s\n' '    <prefer>'; \
-			printf '%s\n' '      <family>MesloLGS Nerd Font</family>'; \
-			printf '%s\n' '      <family>MesloLGS Nerd Font Mono</family>'; \
-			printf '%s\n' '    </prefer>'; \
-			printf '%s\n' '  </alias>'; \
-			printf '%s\n' '  <alias>'; \
-			printf '%s\n' '    <family>MesloLGS Nerd Font</family>'; \
-			printf '%s\n' '    <prefer>'; \
-			printf '%s\n' '      <family>MesloLGS NF</family>'; \
-			printf '%s\n' '      <family>MesloLGS Nerd Font Mono</family>'; \
-			printf '%s\n' '    </prefer>'; \
-			printf '%s\n' '  </alias>'; \
-			printf '%s\n' '  <alias>'; \
-			printf '%s\n' '    <family>MesloLGS Nerd Font Mono</family>'; \
-			printf '%s\n' '    <prefer>'; \
-			printf '%s\n' '      <family>MesloLGS NF</family>'; \
-			printf '%s\n' '      <family>MesloLGS Nerd Font</family>'; \
+			printf '%s\n' '      <family>ITC Serif Gothic Heavy</family>'; \
 			printf '%s\n' '    </prefer>'; \
 			printf '%s\n' '  </alias>'; \
 			printf '%s\n' '</fontconfig>'; \
-		} > ${CFG_DIR}/fontconfig/conf.d/50-meslolgs-nerd-font-aliases.conf; \
+		} > ${CFG_DIR}/fontconfig/conf.d/50-tc-serif-gothic-alias.conf; \
 	else \
-		echo "  Preserving existing Meslo font alias file."; \
+		echo "  Preserving existing heading font alias file."; \
 	fi
 	fc-cache -f >/dev/null 2>&1 || true
 	@echo "==> Fixing user application executable permissions..."

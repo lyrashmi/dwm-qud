@@ -8,7 +8,7 @@ RowLayout {
     id: root
 
     required property var desktopState
-    spacing: Theme.panelGap
+    spacing: Theme.barPanelGap
 
     Repeater {
         model: root.desktopState.runningApps

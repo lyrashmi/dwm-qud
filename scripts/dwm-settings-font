@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-default_family='MesloLGS Nerd Font Mono'
+default_family='Source Code Pro'
 default_scale='1.00'
 protocol_header=$'appearance-font-protocol\t1\t0'
 action_header=$'appearance-font-action-protocol\t1\t0'
@@ -171,21 +171,13 @@ read_boot_id() {
 	printf '%s\n' "$boot_id"
 }
 
-meslo_alias() {
-	case $1 in
-	'MesloLGS Nerd Font Mono' | 'MesloLGS Nerd Font' | 'MesloLGS NF') return 0 ;;
-	*) return 1 ;;
-	esac
-}
-
 font_installed() {
 	local requested=$1 resolved
 	command -v fc-match >/dev/null 2>&1 || return 1
 	command -v timeout >/dev/null 2>&1 || return 1
 	resolved=$(timeout 3 fc-match --format '%{family[0]}\n' \
 		"$requested:charset=20-7e" 2>/dev/null) || return 1
-	[[ $resolved == "$requested" ]] && return 0
-	meslo_alias "$requested" && meslo_alias "$resolved"
+	[[ $resolved == "$requested" ]]
 }
 
 default_font_available() {
@@ -194,7 +186,7 @@ default_font_available() {
 	command -v timeout >/dev/null 2>&1 || return 1
 	resolved=$(timeout 3 fc-match --format '%{family[0]}\n' \
 		"$default_family:charset=20-7e" 2>/dev/null) || return 1
-	meslo_alias "$resolved"
+	[[ $resolved == "$default_family" ]]
 }
 
 read_config() {
@@ -272,7 +264,7 @@ publish_config_if_hash() {
 		printf 'dwm-settings-font: GNU mv with --exchange and --no-copy is required (coreutils 9.5 or newer)\n' >&2
 		return 1
 	fi
-	if ! mv --exchange --no-copy -- "$staged" "$config_file"; then
+	if ! mv --force --exchange --no-copy -- "$staged" "$config_file"; then
 		printf 'dwm-settings-font: atomic file exchange is unavailable on the font configuration filesystem\n' >&2
 		return 1
 	fi
@@ -288,7 +280,7 @@ publish_config_if_hash() {
 		published_config_retained=true
 		return 1
 	fi
-	if mv --exchange --no-copy -- "$staged" "$config_file"; then
+	if mv --force --exchange --no-copy -- "$staged" "$config_file"; then
 		rollback_hash=$(config_path_hash "$staged" 2>/dev/null || true)
 		if [[ $rollback_hash == "$published_hash" ]]; then
 			unlink -- "$staged"
