@@ -21,7 +21,7 @@ Rectangle {
     readonly property string relativeCheckAge: root.formatCheckAge(root.provider.lastSuccess, root.nowSeconds)
     readonly property var providerIcons: ({
         "fedora": "../assets/update-center/fedora.svg",
-        "dwm-titus": "../assets/update-center/dwm-titus.png",
+        "dwm-qud": "../assets/update-center/dwm-qud.png",
         "flatpak": "../assets/update-center/flatpak.svg",
         "mise": "../assets/update-center/mise.svg",
         "other": "../assets/update-center/other.svg"

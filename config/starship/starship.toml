@@ -1,18 +1,52 @@
-# Use terminal palette colors so the prompt follows the dwm-titus theme.
+# ==========================================
+# Starship – QUD Theme
+# ==========================================
+
 add_newline = true
-format = "$directory$git_branch$git_status$character"
 
+format = """
+[╭─](#98875f)$directory$git_branch$git_status$cmd_duration
+[╰─](#98875f)$character"""
+
+# Directory
 [directory]
-style = "bold blue"
+style = "bold #b1c9c3"
+format = "[$path]($style) "
 truncation_length = 3
+truncate_to_repo = true
+truncation_symbol = "…/"
+read_only = " "
+read_only_style = "#d74200"
 
+# Git branch
 [git_branch]
-symbol = "git:"
-style = "bold purple"
+symbol = " "
+style = "bold #cfc041"
+format = "[$symbol$branch]($style) "
 
+# Git status
 [git_status]
-style = "yellow"
+style = "#d74200"
+format = "[$all_status$ahead_behind]($style) "
+modified = "!"
+staged = "+"
+untracked = "?"
+deleted = "✘"
+renamed = "»"
+conflicted = "="
+ahead = "⇡"
+behind = "⇣"
+diverged = "⇕"
 
+# Command duration
+[cmd_duration]
+min_time = 2000
+format = "[$duration]($style) "
+style = "#98875f"
+show_milliseconds = false
+
+# Prompt character
 [character]
-success_symbol = "[>](bold green)"
-error_symbol = "[>](bold red)"
+success_symbol = "[❯](bold #00c420)"
+error_symbol = "[❯](bold #d74200)"
+vimcmd_symbol = "[❮](bold #cfc041)"

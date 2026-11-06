@@ -1,6 +1,6 @@
 .pragma library
 
-const providerOrder = ["fedora", "dwm-titus", "flatpak", "mise"];
+const providerOrder = ["fedora", "dwm-qud", "flatpak", "mise"];
 const providerStates = ["available", "partial", "restricted", "unavailable", "unsupported"];
 const freshnessStates = ["fresh", "cached", "stale", "error"];
 const errorCodes = ["", "malformed", "timeout", "missing-provider", "internal", "scan-failed", "busy",

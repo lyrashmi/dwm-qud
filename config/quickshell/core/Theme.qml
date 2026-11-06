@@ -181,7 +181,7 @@ Singleton {
     }
 
     // Shared spacing and type scales adapted from Omarchy's shell language.
-    // Values intentionally map to the pre-existing dwm-titus geometry.
+    // Values intentionally map to the pre-existing dwm-qud geometry.
     readonly property int spacingXxs: scaledSize(2)
     readonly property int spacingXs: scaledSize(3)
     readonly property int spacingSm: scaledSize(4)

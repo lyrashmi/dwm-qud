@@ -30,7 +30,7 @@ Scope {
     readonly property bool updateOwned: active || confirming || dispatching || status.state === "interrupted"
     readonly property bool canUpdate: status.canUpdate && !busy && !systemBusy
     readonly property string statusPath: (Quickshell.env("XDG_STATE_HOME")
-        || Quickshell.env("HOME") + "/.local/state") + "/dwm-titus/desktop-update/status.json"
+        || Quickshell.env("HOME") + "/.local/state") + "/dwm-qud/desktop-update/status.json"
 
     // Validate installation ownership before executing any updater command.
     readonly property string updaterBootstrap: [
@@ -55,9 +55,9 @@ Scope {
         "        if not worker.stat().st_mode & 0o111:",
         "            continue",
         "        prefix = worker.parent.parent",
-        "        manifest = prefix / \"share/dwm-titus/desktop-install.json\"",
+        "        manifest = prefix / \"share/dwm-qud/desktop-install.json\"",
         "        trusted(manifest)",
-        "        trusted(prefix / \"libexec/dwm-titus/dwm-desktop-update-root\")",
+        "        trusted(prefix / \"libexec/dwm-qud/dwm-desktop-update-root\")",
         "        if json.loads(manifest.read_text())[\"layout\"][\"prefix\"] != str(prefix):",
         "            continue",
         "    except (OSError, ValueError, KeyError, TypeError):",

@@ -51,6 +51,38 @@ borderpx = 3
 #   Dark mode: dark_mode = true                   (true = dark, false = light; default: true)
 #   GTK theme: gtk_theme = "Nordic"               (optional; auto-resolves to bundled Dwm-<preset>, matching installed theme, or Adwaita)
 
+# ── Caves of Qud ──────────────────────────────────────────────────────────────
+[theme.qud]
+normfgcolor     = "#b1c9c3"
+normbgcolor     = "#0b1a1f"
+normbordercolor = "#0b1a1f"
+selfgcolor      = "#ffffff"
+selbgcolor      = "#155352"
+selbordercolor  = "#0e1213"
+
+term_bg         = "#0f3b3a"
+term_fg         = "#b1c9c3"
+term_cursor     = "#ffffff"
+
+term_color0     = "#155352"
+term_color1     = "#d74200"
+term_color2     = "#00c420"
+term_color3     = "#cfc041"
+term_color4     = "#98875f"
+term_color5     = "#da5bd6"
+term_color6     = "#cfc041"
+term_color7     = "#b1c9c3"
+
+term_color8     = "#98875f"
+term_color9     = "#a64a2e"
+term_color10    = "#009403"
+term_color11    = "#e99f10"
+term_color12    = "#0048bd"
+term_color13    = "#b154cf"
+term_color14    = "#98875f"
+term_color15    = "#ffffff"
+
+dark_mode       = true
 
 # ── Nord ──────────────────────────────────────────────────────────────────────
 [theme.nord]
@@ -549,34 +581,3 @@ term_color14    = "#007197"
 term_color15    = "#3760BF"
 
 dark_mode       = false
-
-# ── Caves of Qud ──────────────────────────────────────────────────────────────
-[theme.qud]
-normfgcolor     = "#b1c9c3"
-normbgcolor     = "#0b1a1f"
-normbordercolor = "#0b1a1f"
-selfgcolor      = "#ffffff"
-selbgcolor      = "#155352"
-selbordercolor  = "#0e1213"
-
-term_bg         = "#0f3b3a"
-term_fg         = "#b1c9c3"
-term_cursor     = "#ffffff"
-term_color0     = "#155352"
-term_color1     = "#d74200"
-term_color2     = "#00c420"
-term_color3     = "#cfc041"
-term_color4     = "#98875f"
-term_color5     = "#da5bd6"
-term_color6     = "#cfc041"
-term_color7     = "#b1c9c3"
-term_color8     = "#98875f"
-term_color9     = "#a64a2e"
-term_color10    = "#009403"
-term_color11    = "#e99f10"
-term_color12    = "#0048bd"
-term_color13    = "#b154cf"
-term_color14    = "#98875f"
-term_color15    = "#ffffff"
-
-dark_mode       = true

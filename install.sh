@@ -42,7 +42,7 @@ fedora)
 	;;
 *)
 	err "Unsupported distribution: $DISTRO_NAME"
-	err "dwm-titus supports Fedora only."
+	err "dwm-qud supports Fedora only."
 	exit 1
 	;;
 esac
@@ -441,7 +441,7 @@ install_supported_terminal() {
 
 configure_quickshell_picom_opacity() {
 	local config="/etc/xdg/picom.conf"
-	local backup="${config}.dwm-titus.bak"
+	local backup="${config}.dwm-qud.bak"
 	local tooltip_rule="^([[:space:]]*\"[0-9]+([.][0-9]+)?:window_type = 'tooltip')(\"[[:space:]]*,?[[:space:]]*)$"
 	local configured_rule="^[[:space:]]*\"[0-9]+([.][0-9]+)?:window_type = 'tooltip' && name != 'quickshell'\"[[:space:]]*,?[[:space:]]*$"
 	local tmp
@@ -558,14 +558,14 @@ install_lightdm_config() {
 		sudo restorecon \
 			"$lightdm_config" \
 			/etc/lightdm/slick-greeter.conf \
-			/usr/share/pixmaps/dwm-titus.jpg \
-			/usr/share/pixmaps/dwm-titus-logo.png
+			/usr/share/pixmaps/dwm-qud.jpg \
+			/usr/share/pixmaps/dwm-qud-logo.png
 	fi
 }
 
 echo ""
 echo "╔═══════════════════════════════════════════╗"
-echo "║             dwm-titus Installer           ║"
+echo "║             dwm-qud Installer           ║"
 echo "╚═══════════════════════════════════════════╝"
 echo ""
 info "Distribution: $DISTRO_NAME"
@@ -613,7 +613,7 @@ if install_recommended_profile; then
 	dwm_install_package_profile system-management
 	if ! env -u DWM_TEST_MODE -u DWM_TEST_QUICKSHELL_VERSION \
 		"$REPO_DIR/scripts/dwm-quickshell-version-check"; then
-		err "The installed Quickshell build is incompatible with dwm-titus."
+		err "The installed Quickshell build is incompatible with dwm-qud."
 		exit 1
 	fi
 	if ! dwm_install_available_package_profile screenshot-optional; then
@@ -768,11 +768,74 @@ sudo make install \
 	XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}" \
 	XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}" \
 	XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+
+# ── User-facing dwm-qud config seeding ───────────────────
+info "Seeding dwm-qud user configuration files..."
+
+# Picom shader should always match the repo implementation.
+install -Dm644 "$REPO_DIR/config/picom/scanlines.glsl" \
+  "$HOME/.config/picom/scanlines.glsl"
+
+# Picom main config: seed only if missing.
+if [[ ! -f "$HOME/.config/picom.conf" ]]; then
+  sed "s|@HOME@|$HOME|g" "$REPO_DIR/config/picom.conf" \
+    > "$HOME/.config/picom.conf"
+fi
+
+# Starship: seed only if missing.
+if [[ ! -f "$HOME/.config/starship.toml" ]]; then
+  install -Dm644 "$REPO_DIR/config/starship.toml" \
+    "$HOME/.config/starship.toml"
+fi
+
+# Alacritty: seed missing files.
+mkdir -p "$HOME/.config/alacritty"
+
+for f in "$REPO_DIR"/config/alacritty/*.toml; do
+  [[ -e "$f" ]] || continue
+
+  base="$(basename "$f")"
+
+  if [[ ! -f "$HOME/.config/alacritty/$base" ]]; then
+    install -Dm644 "$f" "$HOME/.config/alacritty/$base"
+  fi
+done
+
+# dwm-qud core config: seed missing files.
+mkdir -p "$HOME/.config/dwm-qud"
+
+for f in \
+  hotkeys.toml \
+  themes.toml \
+  window-rules.toml \
+  personalization.conf \
+  font.conf \
+  input-settings.conf \
+  notification-settings.json \
+  cursor.Xresources \
+  xsettingsd.conf \
+  theme-env.sh
+do
+  if [[ -f "$REPO_DIR/config/$f" && ! -f "$HOME/.config/dwm-qud/$f" ]]; then
+    install -Dm644 "$REPO_DIR/config/$f" "$HOME/.config/dwm-qud/$f"
+  fi
+done
+
+ok "User configuration seeding complete."
+
+# Quickshell config
+if [[ ! -d "$HOME/.local/share/dwm-qud/config/quickshell" ]]; then
+  install -d "$HOME/.local/share/dwm-qud/config"
+  cp -a "$REPO_DIR/config/quickshell" \
+    "$HOME/.local/share/dwm-qud/config/"
+fi
+
+
 # Install a low-priority DNF5 default without replacing administrator settings.
 # The main /etc/dnf/dnf.conf and later drop-ins keep precedence.
 info "Installing DNF5 defaults while preserving administrator settings."
 dnf_defaults_helper=$(make -s --no-print-directory print-dnf-defaults-helper)
-sudo /usr/bin/python3 -I "$dnf_defaults_helper" install --source "$REPO_DIR/config/dnf/40-dwm-titus.conf"
+sudo /usr/bin/python3 -I "$dnf_defaults_helper" install --source "$REPO_DIR/config/dnf/40-dwm-qud.conf"
 # Seed before Gear Lever creates its AppImage MIME preference file.
 bash "$REPO_DIR/scripts/seed-default-apps.sh"
 if install_recommended_profile; then

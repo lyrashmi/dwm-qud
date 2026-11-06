@@ -51,9 +51,9 @@ Scope {
     property var pendingCaptures: []
 
     readonly property string homeDir: Quickshell.env("HOME") || ""
-    readonly property string configDir: (Quickshell.env("XDG_CONFIG_HOME") || (root.homeDir + "/.config")) + "/dwm-titus"
+    readonly property string configDir: (Quickshell.env("XDG_CONFIG_HOME") || (root.homeDir + "/.config")) + "/dwm-qud"
     readonly property string settingsPath: root.configDir + "/clipboard-settings.json"
-    readonly property string cacheDir: (Quickshell.env("XDG_CACHE_HOME") || (root.homeDir + "/.cache")) + "/dwm-titus"
+    readonly property string cacheDir: (Quickshell.env("XDG_CACHE_HOME") || (root.homeDir + "/.cache")) + "/dwm-qud"
     readonly property string historyPath: root.cacheDir + "/clipboard-history-v2.json"
     readonly property string status: {
         if (root.backendFailed) return "Capture stopped: privacy backend unavailable; enable to retry";

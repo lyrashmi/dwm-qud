@@ -1,0 +1,12 @@
+[Unit]
+Description=Xremap keyboard shortcuts
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/xremap --desktop x11 %h/.config/xremap/config.yml
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

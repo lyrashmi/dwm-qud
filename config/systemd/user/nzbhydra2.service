@@ -1,0 +1,13 @@
+[Unit]
+Description=NZBHydra2
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/.local/opt/nzbhydra2
+ExecStart=/usr/bin/python3 %h/.local/opt/nzbhydra2/nzbhydra2wrapperPy3.py --nobrowser
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

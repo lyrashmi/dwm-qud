@@ -22,8 +22,6 @@
 #          Media           : "XF86AudioMute"  "XF86AudioRaiseVolume"
 #                            "XF86AudioLowerVolume"  "XF86AudioPlay"
 #                            "XF86MonBrightnessUp"  "XF86MonBrightnessDown"
-  { mod="", key="XF86KbdBrightnessUp", desc="Keyboard backlight +", func="spawn", cmd="brightnessctl --device=':white:kbd_backlight' set 10%+" },
-  { mod="", key="XF86KbdBrightnessDown", desc="Keyboard backlight -", func="spawn", cmd="brightnessctl --device=':white:kbd_backlight' set 10%-" },
 #
 #  func  What to do:
 #          spawn             → exec=[...] or cmd="..."  run a program / shell
@@ -42,7 +40,6 @@
 #          togglebar         → show/hide the status bar
 #          focusmon          → focus next/prev monitor           (i=1 or i=-1)
 #          tagmon            → send window to next/prev monitor  (i=1 or i=-1)
-#          cyclelayout       → next/prev keyboard layout        (i=1 or i=-1)
 #          view              → switch to a tag  (ui=-1 = show all)
 #          tag               → send window to a tag
 #          toggleview / toggletag → also show/tag alongside current
@@ -64,7 +61,6 @@ keys = [
 
   # ── Launchers ────────────────────────────────────────────────────────────────
   { mod="SUPER",            key="r",       desc="App launcher",            func="spawn",       cmd="quickshell ipc --path \"${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/shell.qml\" call launcher toggle" },
-  { mod="SUPER SHIFT",            key="v",       desc="Clipboard history",       func="spawn",       cmd="quickshell ipc --path \"${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/shell.qml\" call clipboard toggle" },
   { mod="SUPER",            key="Return",       desc="Terminal",                 func="spawn",       exec=["$terminal"] },
   { mod="SUPER",            key="w",       desc="Looking Glass (VM)",      func="spawn",       cmd="looking-glass-client -F" },
   { mod="SUPER SHIFT",      key="w",       desc="Randomize wallpaper",     func="spawn",       cmd="dwm-quickshell-controlcenter action reload-wallpaper" },
@@ -96,6 +92,8 @@ keys = [
   { mod="",                 key="XF86MonBrightnessUp",    desc="Brightness +",  func="spawn",  cmd="brightnessctl set 10%+" },
   { mod="",                 key="XF86MonBrightnessDown",  desc="Brightness -",  func="spawn",  cmd="brightnessctl set 10%-" },
 
+  { mod="", key="XF86KbdBrightnessUp",   desc="Keyboard backlight +", func="spawn", cmd="brightnessctl --device=':white:kbd_backlight' set 10%+" },
+  { mod="", key="XF86KbdBrightnessDown", desc="Keyboard backlight -", func="spawn", cmd="brightnessctl --device=':white:kbd_backlight' set 10%-" },
   # ── Window focus & movement ───────────────────────────────────────────────────
   { mod="SUPER",            key="j",       desc="Focus next window",       func="focusstack",  i=1 },
   { mod="SUPER",            key="k",       desc="Focus prev window",       func="focusstack",  i=-1 },
@@ -136,13 +134,12 @@ keys = [
   { mod="SUPER CTRL SHIFT", key="r",       desc="Reboot",                  func="spawn",       cmd="systemctl reboot" },
   { mod="SUPER CTRL SHIFT", key="s",       desc="Suspend",                 func="spawn",       cmd="systemctl suspend" },
 
-  # ── Keyboard layout ───────────────────────────────────────────────────────────
-  # Uncomment to switch to the next layout (i=-1 for the previous one).
-  # { mod="SUPER ALT",        key="k",       desc="Next keyboard layout",    func="cyclelayout", i=1 },
 
+
+
+
+  { mod="SUPER SHIFT", key="v", desc="Clipboard history", func="spawn", cmd="quickshell ipc --path \"${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/shell.qml\" call clipboard toggle" },
 ]
-
-# ── TAG BINDINGS ──────────────────────────────────────────────────────────────
 # Each entry auto-generates 4 bindings for that tag number:
 #   SUPER + key                  → switch to tag
 #   SUPER + CTRL + key           → also show this tag alongside current
@@ -201,3 +198,4 @@ buttons = [
   { click="ClkTagBar",    mod="",       button=1,  func="view" },
   { click="ClkTagBar",    mod="",       button=3,  func="toggleview" },
 ]
+
