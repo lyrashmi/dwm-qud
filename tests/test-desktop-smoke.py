@@ -113,7 +113,7 @@ def main():
                         for line in geometry:
                             print(f"  {line}")
                         
-                        if "HEIGHT=30" in geometry and "WIDTH=1024" in geometry:
+                        if "HEIGHT=36" in geometry and "WIDTH=1024" in geometry:
                             print("DEBUG: Found matching panel!")
                             return True
                             
