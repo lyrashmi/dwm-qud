@@ -65,14 +65,14 @@ def main():
                         return
                     time.sleep(0.1)
 
-    import glob
-    print("\n=== QUICKSHELL LOG DUMP ===")
-    for log_file in glob.glob("/run/dwm-ci/qs-*/quickshell/by-id/*/log.qslog"):
-        print(f"--- {log_file} ---")
-        try:
-            print(open(log_file).read())
-        except: pass
-    print("===========================\n")
+                import glob
+                print("\n=== QUICKSHELL LOG DUMP ===")
+                for log_file in glob.glob("/run/dwm-ci/qs-*/quickshell/by-id/*/log.qslog"):
+                    print(f"--- {log_file} ---")
+                    try:
+                        print(open(log_file).read())
+                    except: pass
+                print("===========================\n")
 
                 raise RuntimeError(f"Timed out waiting for {label}")
 
