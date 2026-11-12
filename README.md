@@ -12,11 +12,7 @@ cd dwm-qud
 
 ## Screenshots
 
-### Example 1
-
 ![dwm-qud example 1](example1.jpg)
-
-### Example 2
 
 ![dwm-qud example 2](example2.jpg)
 
