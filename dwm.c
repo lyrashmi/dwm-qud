@@ -473,6 +473,7 @@ static Rule         *rt_rules  = NULL;
 static int           rt_nrules = 0;
 /* Runtime border pixel width (initialized to 1; overridden by themes.toml) */
 static unsigned int  dyn_borderpx;
+static unsigned int  dyn_clientpadding;
 /* inotify */
 static int           inotify_fd = -1;
 static int           inotify_wd = -1;
@@ -1105,7 +1106,7 @@ configure(Client *c)
 	ce.height = c->h;
 	ce.border_width = c->bw;
 
-	if (noborder(c) && enable_noborder) {
+	if (noborder(c) && enable_noborder && dyn_borderpx == 0) {
 		ce.width += c->bw * 2;
 		ce.height += c->bw * 2;
 		ce.border_width = 0;
@@ -1449,6 +1450,36 @@ expose(XEvent *e)
 
 
 
+static void
+setwindowborder(Window win, unsigned long pixel)
+{
+        XWindowAttributes wa;
+        XRenderPictFormat *format;
+        XColor color;
+
+        if (!XGetWindowAttributes(dpy, win, &wa))
+                return;
+
+        color.pixel = pixel;
+        if (XQueryColor(dpy, DefaultColormap(dpy, screen), &color) &&
+            wa.colormap && XAllocColor(dpy, wa.colormap, &color))
+                pixel = color.pixel;
+
+        format = XRenderFindVisualFormat(dpy, wa.visual);
+        if (format && format->type == PictTypeDirect &&
+            format->direct.alphaMask &&
+            format->direct.alpha < sizeof(pixel) * 8) {
+                unsigned long alpha_mask =
+                        (unsigned long)format->direct.alphaMask
+                        << format->direct.alpha;
+                pixel |= alpha_mask;
+        }
+
+        XSetWindowBorder(dpy, win, pixel);
+}
+
+
+
 void
 focus(Client *c)
 {
@@ -1470,6 +1501,8 @@ focus(Client *c)
 		ewmh_clear_active_window();
 	}
 	selmon->sel = c;
+	if (c && scheme && scheme[SchemeSel])
+		setwindowborder(c->win, scheme[SchemeSel][ColBorder].pixel);
 	updateselectedmonitor();
 	restackprioritywindows();
 	drawbars();
@@ -2037,9 +2070,10 @@ manage(Window w, XWindowAttributes *wa)
 	} else {
 		c->mon = selmon;
 		rulefullscreen = applyrules(c);
-		c->bw = 0;
 		term = termforwin(c);
 	}
+
+	c->bw = (c->isfullscreen && c->fakefullscreen != 1) ? 0 : dyn_borderpx;
 
 	if (c->x + WIDTH(c) > c->mon->wx + c->mon->ww)
 		c->x = c->mon->wx + c->mon->ww - WIDTH(c);
@@ -2049,6 +2083,8 @@ manage(Window w, XWindowAttributes *wa)
 	c->y = MAX(c->y, c->mon->wy);
 	wc.border_width = c->bw;
 	XConfigureWindow(dpy, w, CWBorderWidth, &wc);
+	if (scheme && scheme[SchemeNorm])
+		setwindowborder(w, scheme[SchemeNorm][ColBorder].pixel);
 	configure(c); /* propagates border_width, if size doesn't change */
 	updatewindowtype(c);
 	updatesizehints(c);
@@ -2608,7 +2644,7 @@ resizeclient(Client *c, int x, int y, int w, int h)
 	c->oldw = c->w; c->w = wc.width = w;
 	c->oldh = c->h; c->h = wc.height = h;
 	wc.border_width = c->bw;
-	if (noborder(c) && enable_noborder) {
+	if (noborder(c) && enable_noborder && dyn_borderpx == 0) {
 		wc.width += c->bw * 2;
 		wc.height += c->bw * 2;
 		wc.border_width = 0;
@@ -3903,6 +3939,18 @@ load_themes_toml(const char *user_path, const char *default_path)
 		}
 	}
 
+	/* Read window appearance settings. Keep values within sensible limits. */
+	const TomlValue *vborderpx = toml_get(&doc, "appearance", "borderpx");
+	if (vborderpx && vborderpx->type == TOML_INT) {
+		long value = vborderpx->i;
+		dyn_borderpx = value < 0 ? 0 : value > 64 ? 64 : (unsigned int)value;
+	}
+	const TomlValue *vclientpadding = toml_get(&doc, "appearance", "clientpadding");
+	if (vclientpadding && vclientpadding->type == TOML_INT) {
+		long value = vclientpadding->i;
+		dyn_clientpadding = value < 0 ? 0 : value > 128 ? 128 : (unsigned int)value;
+	}
+
 	/* Build color table with Nord fallback values */
 	static char c_normborder[8], c_normbg[8], c_normfg[8];
 	static char c_selborder[8],  c_selbg[8],  c_selfg[8];
@@ -3959,15 +4007,18 @@ load_themes_toml(const char *user_path, const char *default_path)
 		}
 	}
 
-	/* Native window borders are disabled; keep this zero across theme reloads. */
-	dyn_borderpx = 0;
+	/* Apply the new border settings to existing clients. Actual fullscreen
+	 * windows remain borderless; their saved border width is left untouched. */
 	if (mons) {
 		Monitor *m;
 		Client *c;
 		for (m = mons; m; m = m->next)
 			for (c = m->clients; c; c = c->next) {
-				c->bw = 0;
+				int actualfullscreen = c->isfullscreen && c->fakefullscreen != 1;
+				c->bw = actualfullscreen ? 0 : dyn_borderpx;
 				XSetWindowBorderWidth(dpy, c->win, c->bw);
+				if (scheme && scheme[m->sel == c ? SchemeSel : SchemeNorm])
+					setwindowborder(c->win, scheme[m->sel == c ? SchemeSel : SchemeNorm][ColBorder].pixel);
 			}
 	}
 
@@ -4263,7 +4314,6 @@ setup(void)
 	sigchld(0);
 	/* The session helper uses SIGUSR2 for a normal, cleanup-aware exit. */
 	signal(SIGUSR2, sigusr2_handler);
-	dyn_borderpx = 0; /* native window borders are disabled */
 
 	/* the one line of bloat that would have saved a lot of time for a lot of people */
 	putenv("_JAVA_AWT_WM_NONREPARENTING=1");
@@ -4669,6 +4719,8 @@ tile(Monitor *m)
 	unsigned int i, n;
 	int mx = 0, my = 0, mh = 0, mw = 0;
 	int sx = 0, sy = 0, sh = 0, sw = 0;
+	int pad = dyn_clientpadding;
+	int cellh;
 	float mfacts, sfacts;
 	int mrest, srest;
 	Client *c;
@@ -4693,11 +4745,18 @@ tile(Monitor *m)
 
 	for (i = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
 		if (i < m->nmaster) {
-			resize(c, mx, my, mw - (2*c->bw), (mh / mfacts) * c->cfact + (i < mrest ? 1 : 0) - (2*c->bw), 0);
-			my += HEIGHT(c);
+			cellh = (mh / mfacts) * c->cfact + (i < mrest ? 1 : 0);
+			resize(c, mx + pad, my + pad,
+				MAX(1, mw - 2 * pad - 2 * c->bw),
+				MAX(1, cellh - 2 * pad - 2 * c->bw), 0);
+			my += cellh;
 		} else {
-			resize(c, sx, sy, sw - (2*c->bw), (sh / sfacts) * c->cfact + ((i - m->nmaster) < srest ? 1 : 0) - (2*c->bw), 0);
-			sy += HEIGHT(c);
+			cellh = (sh / sfacts) * c->cfact
+				+ ((i - m->nmaster) < srest ? 1 : 0);
+			resize(c, sx + pad, sy + pad,
+				MAX(1, sw - 2 * pad - 2 * c->bw),
+				MAX(1, cellh - 2 * pad - 2 * c->bw), 0);
+			sy += cellh;
 		}
 }
 
@@ -4847,6 +4906,8 @@ unfocus(Client *c, int setfocus)
 	if (!c)
 		return;
 	grabbuttons(c, 0);
+	if (scheme && scheme[SchemeNorm])
+		setwindowborder(c->win, scheme[SchemeNorm][ColBorder].pixel);
 	if (setfocus) {
 		XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
 		ewmh_clear_active_window();

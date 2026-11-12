@@ -31,9 +31,10 @@
 theme = "qud"
 
 [appearance]
-borderpx = 3
+borderpx = 6
 
 
+clientpadding = 6
 # ══════════════════════════════════════════════════════════════════════════════
 # THEME DEFINITIONS  —  add or edit themes here
 # ══════════════════════════════════════════════════════════════════════════════
@@ -54,13 +55,13 @@ borderpx = 3
 # ── Caves of Qud ──────────────────────────────────────────────────────────────
 [theme.qud]
 normfgcolor     = "#b1c9c3"
-normbgcolor     = "#0b1a1f"
-normbordercolor = "#0b1a1f"
+normbgcolor = "#0b1a1f"
+normbordercolor = "#0f3b3a"
 selfgcolor      = "#ffffff"
-selbgcolor      = "#155352"
-selbordercolor  = "#0e1213"
+selbgcolor = "#155352"
+selbordercolor = "#789e9f"
 
-term_bg         = "#0f3b3a"
+term_bg = "#0f3b3a"
 term_fg         = "#b1c9c3"
 term_cursor     = "#ffffff"
 
