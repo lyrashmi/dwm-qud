@@ -1,8 +1,10 @@
 # dwm-qud
 
-A customised fork of [dwm](https://dwm.suckless.org/), featuring a [Caves of Qud](https://cavesofqud.com/) inspired aesthetic, configurable window styling and a lightweight X11 desktop environment.
+A customised fork of [dwm](https://dwm.suckless.org/) for Fedora 44, featuring a [Caves of Qud](https://cavesofqud.com/) inspired aesthetic, configurable window styling and a lightweight X11 desktop environment.
 
 ## Installation
+
+The installation script is intended for **Fedora Linux 44**.
 
 ```bash
 git clone https://github.com/lyrashmi/dwm-qud.git
