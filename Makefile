@@ -350,6 +350,10 @@ install-user-files:
 		echo "  Preserving existing hotkeys and window rules after migration warning."
 	@echo "==> Migrating legacy graphical-session startup..."
 	HOME="${USER_HOME}" XDG_CONFIG_HOME="${XDG_CONFIG_HOME}" scripts/migrate-graphical-session.sh
+	@echo "==> Migrating Thunar custom actions..."
+	@if [ -f "${CFG_DIR}/Thunar/uca.xml" ] && grep -Fq '<unique-id>dwm-titus-open-terminal-here</unique-id>' "${CFG_DIR}/Thunar/uca.xml"; then \
+		sed -i 's/<unique-id>dwm-titus-open-terminal-here<\/unique-id>/<unique-id>dwm-qud-open-terminal-here<\/unique-id>/g' "${CFG_DIR}/Thunar/uca.xml"; \
+	fi
 	@echo "==> Installing heading font alias..."
 	mkdir -p ${CFG_DIR}/fontconfig/conf.d
 	rm -f ${CFG_DIR}/fontconfig/conf.d/50-meslolgs-nerd-font-aliases.conf

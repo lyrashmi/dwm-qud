@@ -821,6 +821,14 @@ do
   fi
 done
 
+# Migrate Thunar custom actions from legacy dwm-titus identifier
+if [[ -f "$HOME/.config/Thunar/uca.xml" ]]; then
+	sed -i 's/<unique-id>dwm-titus-open-terminal-here<\/unique-id>/<unique-id>dwm-qud-open-terminal-here<\/unique-id>/g' "$HOME/.config/Thunar/uca.xml"
+elif [[ -f "$REPO_DIR/config/Thunar/uca.xml" ]]; then
+	mkdir -p "$HOME/.config/Thunar"
+	install -Dm644 "$REPO_DIR/config/Thunar/uca.xml" "$HOME/.config/Thunar/uca.xml"
+fi
+
 ok "User configuration seeding complete."
 
 # Quickshell config
@@ -866,9 +874,9 @@ if ! command -v fastfetch &>/dev/null; then
 fi
 
 mkdir -p "$HOME/.config/fastfetch"
-if [[ -f "$REPO_DIR/config/fastfetch/config.jsonc" ]]; then
-    install -m 0644 "$REPO_DIR/config/fastfetch/config.jsonc" "$HOME/.config/fastfetch/config.jsonc"
-    ok "Fastfetch configuration installed."
+if [[ -d "$REPO_DIR/config/fastfetch" ]]; then
+    cp -a "$REPO_DIR/config/fastfetch/." "$HOME/.config/fastfetch/"
+    ok "Fastfetch configuration and assets installed."
 else
     warn "Fastfetch configuration not found in repository."
 fi

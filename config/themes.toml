@@ -55,13 +55,13 @@ clientpadding = 6
 # ── Caves of Qud ──────────────────────────────────────────────────────────────
 [theme.qud]
 normfgcolor     = "#b1c9c3"
-normbgcolor = "#0b1a1f"
+normbgcolor     = "#072628"
 normbordercolor = "#0f3b3a"
 selfgcolor      = "#ffffff"
-selbgcolor = "#155352"
-selbordercolor = "#789e9f"
+selbgcolor      = "#072628"
+selbordercolor  = "#789e9f"
 
-term_bg = "#0f3b3a"
+term_bg         = "#0f3b3a"
 term_fg         = "#b1c9c3"
 term_cursor     = "#ffffff"
 
